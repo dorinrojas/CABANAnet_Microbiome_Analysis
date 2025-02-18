@@ -242,7 +242,7 @@ GENOME FILTERING OPTIONS:
 
 GENOME QUALITY ASSESSMENT OPTIONS:
   --ignoreGenomeQuality
-                        Don't run checkM or do any quality filtering. NOT RECOMMENDED! This is useful for
+                        Dont run checkM or do any quality filtering. NOT RECOMMENDED! This is useful for
                         use with bacteriophages or eukaryotes or things where checkM scoring does not
                         work. Will only choose genomes based on length and N50 (default: False)
   --genomeInfo GENOMEINFO
