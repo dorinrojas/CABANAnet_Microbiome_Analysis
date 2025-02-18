@@ -174,7 +174,7 @@ In this sense, the bi-phasic approach first divides genomes into clusters using 
 
 > Notice this approach does not considers the taxonomical classification of the bins and it is merely based on statistics. This allows the analysis to be performed either before or after the taxonomical assigment with GTDB-tk.
 
-Here, a divided dereplication process is conducted. MAGs that were classified to the genus level are dereplicated using dRep, while those classified to the species level are dereplicated through a manual python script. This final python script integrates the results from dRep and output the pangenome (`.fasta` file with all the representative bins) that is used as input for the abundance and depth estimation.
+Here, a basic dereplication process for an example dataset of bins is conducted.
 
 ### Running dRep
 
@@ -476,15 +476,40 @@ time
 
 The output from the dRep analysis ___
 
-As mentioned above, the dereplication of those bins classified to the species level are dereplicated with a python file.
-
-```python
-
-```
-
 ## Functional annotation of MAGs (ABRicate, eggNOG-mapper)
 
-[]
+Further analysis is performed using a pangenome. A pangenome is a file with multiple sequences representing the genomes from the sample. Basically, it is a concatenation of the bins into a singular file. Although, the individual files can be used in the analysis, the utilization of a pangenome could avoid several coding issues, faciliting the overall pipeline. This pangenome can be created through different approaches. Here, the provide a simple bash code using the command `cat`.
+
+>Notice the following sections of the workshop are hands-on. Remember where are your files of interest located in your console.
+
+```bash
+#!/bin/bash
+
+cd /home/dorian.rojas/test
+CTN_PATH=/opt/ohpc/pub/containers/BIO/
+
+# Create a general directpry
+mkdir -p 10-final-MAGs/bins
+
+# Select each of the bins that passed the GUNC analysis
+for file_name in $(awk '{print $2}' 10-final-MAGs/gtdb-input.txt); do
+  # Create a variable for the name of the (de)compressed bins
+  compressed="${file_name}_filtered_kept_contigs.fasta.gz"
+  newname="${file_name}_filtered_kept_contigs.fasta"
+
+  # Decompress the bins
+  gzip -dc 7-mdmcleaner/bins/$compressed > 7-mdmcleaner/bins/$newname
+
+  # Rename the contigs using the bbmap toolkit and output in general directory
+  $CTN_PATH/bbmap-39.10.sif rename.sh in=7-mdmcleaner/bins/$newname \
+  out=10-final-MAGs/bins/$newname prefix=$file_name
+done 
+
+# Concatenate decompressed renamed files
+cat 10-final-MAGs/bins/*.fasta > 10-final-MAGs/bins/pangenome.fasta
+```
+
+Copy the code into a `pangenome.sh` file. Ensure to change the path where the data is located. This script will decompress the `.fasta.gz` files and rename each contigs with the sample name. This step is crucial as `cat` will combine all contigs regardless of the their names. For this, the toolkit BBMap and module `rename.sh` are used. Finally, all the decompressed renamed files are combined into a single pangenome fasta.
 
 ### Running abricate
 
