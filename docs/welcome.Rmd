@@ -1,0 +1,45 @@
+---
+title: "Welcome"
+author: "B.Sc Dorian Rojas-Villalta"
+date: "2024-12-10"
+output: html_document
+---
+
+## Workshop "Metagenomics analysis of the gastrointestinal human microbiome"
+
+> This workshop is organized by the CABANAnet network in collaboration with the Cellular and Molecular Biology Research Center (CIBCM) and Informatics Center (CI) from the University of Costa Rica (UCR)
+
+* <em> **Coordinator:  **
+  + Ph.D. Rebeca Campos-Sánchez: Principal Investigator from the Cellular and Molecular Biology Research Center (CIBCM, UCR). Expertise in clinical and human genomics and metagenomics. [Google scholar](https://scholar.google.com/citations?user=5Jdh-RkAAAAJ&hl=en&oi=ao) 
+
+* **Instructor:  **
+  + B.Sc. Dorian Rojas-Villalta: Secondee at the Cellular and Molecular Biology Resesarch Center (CIBCM, UCR). Expertise in bacterial genomics and metagenomics. [Google scholar](https://scholar.google.com/citations?user=kyLnECwAAAAJ&hl=en) </em>
+    
+### Description
+
+Recent discoverys about the role of gastrointestinal microbiome in human health raised pertinent research. At the same time, the accelerated development of -omics sciences has favored the study of the microbiome through techniques such as metataxonomics and metagenomics. Nowadays, shotgun metagenomics has gained most attentions due to its advantages (e.g. direct annotation of the microbiome functional role, greatest depth in profiling). Therefore, expanding knowledge regarding metagenomics data analysis is required to incentivate the use and application of this scheme. This workshop aims to teach the basics of interpretation and analysis of metagenomics sequences through the institutional high-performance computing cluster of the UCR. 
+
+### Index
+During the workshop a previously sequences dataset will be used. This reads corresponde to one healthy (SRR8555090) and one acute diarrhea disease patient (SRR9988196) fecal samples. Through analyzing these sequences, we will explore: 
+
+| Topic | Sub-topic | Used bioinformatics tools |
+|:------|:--------|--------:|
+|Human gastrointestinal microbiology and sequencing fundaments | - Physiological role of microbiome || 
+|| - Omics sciences, New generation sequencing technologies, and bioinformatic data format ||
+
+
+omg html programming using markdown how vintage
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
