@@ -309,7 +309,7 @@ date
 time
 ```
 
-### Workship methodology
+### Workshop methodology
 
 For the workshop, two sample will be used to ensure the optimization of computational resources and avoid saturating the cluster. In order to have a better automatization of the pipeline, the slurm files are written under a simple interconection of different files. Automatization of workflows can be performed using other more efficient softwares (e.g. Nextflow, Snakemake). However, these require prior knowlegde on how to code the automatized pipeline. Therefore, we will use simple Bash commands.
 
@@ -361,9 +361,9 @@ ${id}.fastq = sample1.fastq
 This comes handy in following codes when extensions and output names are required. For instance, during the quality control, input arguments requires the extension of each paired reads file (`${sample}_1.fastq`,`${sample}_2.fastq`).
 
 ```vim
-for id in $@; do
+for sample in $@; do
 
-echo "Working on " $id
+echo "Working on " $sample
 
 mkdir 2-read_qc/$sample
 
@@ -371,7 +371,7 @@ metawrap read_qc -1 1-data/${sample}_1.fastq \
         -2 1-data/${sample}_2.fastq \
         -t 64 -o 2-read_qc/$sample
 
-echo $id " done"
+echo $sample " done"
 
 done
 ```
