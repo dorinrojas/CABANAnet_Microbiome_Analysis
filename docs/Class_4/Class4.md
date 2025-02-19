@@ -511,9 +511,24 @@ cat 10-final-MAGs/bins/*.fasta > 10-final-MAGs/bins/pangenome.fasta
 
 Copy the code into a `pangenome.sh` file. Ensure to change the path where the data is located. This script will decompress the `.fasta.gz` files and rename each contigs with the sample name. This step is crucial as `cat` will combine all contigs regardless of the their names. For this, the toolkit BBMap and module `rename.sh` are used. Finally, all the decompressed renamed files are combined into a single pangenome fasta.
 
+This final file can be use to facilitate the command of other analysis. During this workshop, the functional annotation of clinical features and metabolic pathways are going to be performed. First the annotation of clinical features refers to the identification of genomic characteristics that can be associated to a clinical risk. In this regard, mobile genetic elements and antibiotic resistance genes can be of interest.
+
+Several tools have been developed for this approach. For instance, the Comprehensive Antibiotic Resistance Database (CARD) developed the [Resistance Gene Identifer](https://github.com/arpcard/rgi) (RGI) that allows the annotation against this database. Moreover, the [AMRFinderPlus](https://github.com/ncbi/amr) performs a similar tasks againt the National Center for Biotechnology Information (NCBI) database. The large quantity of databases for antibiotic resistance genes and other features resulted in the need of a more general software that could conduct the identification against multiple databases. As a solution to this issue, ABRicate was proposed.
+
+[ABRicate](https://github.com/tseemann/abricate/tree/master) is a complete tool to perform the annotation of different features taking in consideration multiple databases. Among the predetermine reference, the NCBI, CARD, Resfinder, ARG-ANNOT, MEGARES, EcOH, PlasmidFinder, VFDB, and Ecoli_VF are included. The tools also allows the user to create they custom databases for more specific analysis. To perform the annotation, ABRicate employs the BLAST+ software.
+
+> The authors defined the etymology as "Anti-Biotic Resistance" in the form of an English verb to represent the software taking action against the antibiotic resistance. They also stated that "[it] is unlikely to receive an infamous [JABBA AWARD](http://www.acgt.me/blog/2014/12/1/time-for-a-new-jabba-award-for-just-another-bogus-bioinformatics-acronym) (Just Another Bogus Bioinformatics Acronym Award).
+
 ### Running abricate
 
-[]
+This software is installed as a container and is simple to use. The only issue is that in order run multiple databases at the same time, a bash `for` loop must be used as the toolf does not accept various databases simultaneously.
+
+```bash
+```
+
+Code for a simple annotation using all the available databases by the software.
+
+The output from the analysis is a `.tsv` table with several columns that indicate the name of the file, contigs in which the hit was detected, gene, coverage, database, among others. Notice the use of the pangenome file for this analysis facilitates the running code. However, the rename of the contigs headers was required to further associated the identified hits to a particular bin.
 
 ### Running eggnog-mapper
 
@@ -653,12 +668,34 @@ date
 time
 ```
 
-**`pangenome.py` file:**
+**`pangenome.sh` file:**
 
-```python
+```bash
+#!/bin/bash
 
+cd /home/dorian.rojas/test
+CTN_PATH=/opt/ohpc/pub/containers/BIO/
+
+# Create a general directpry
+mkdir -p 10-final-MAGs/bins
+
+# Select each of the bins that passed the GUNC analysis
+for file_name in $(awk '{print $2}' 10-final-MAGs/gtdb-input.txt); do
+  # Create a variable for the name of the (de)compressed bins
+  compressed="${file_name}_filtered_kept_contigs.fasta.gz"
+  newname="${file_name}_filtered_kept_contigs.fasta"
+
+  # Decompress the bins
+  gzip -dc 7-mdmcleaner/bins/$compressed > 7-mdmcleaner/bins/$newname
+
+  # Rename the contigs using the bbmap toolkit and output in general directory
+  $CTN_PATH/bbmap-39.10.sif rename.sh in=7-mdmcleaner/bins/$newname \
+  out=10-final-MAGs/bins/$newname prefix=$file_name
+done 
+
+# Concatenate decompressed renamed files
+cat 10-final-MAGs/bins/*.fasta > 10-final-MAGs/bins/pangenome.fasta
 ```
-
 
 **`abricate.slurm` file:**
 
