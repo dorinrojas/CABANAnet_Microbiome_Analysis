@@ -534,12 +534,12 @@ sbatch read_qc.slurm $sample2
 cd /home/dorian.rojas/test
 
 CTN_PATH=/opt/ohpc/pub/containers/BIO/
-$CTN_PATH/sra-tools-3.1.1.sif fasterq-dump --version
+$CTN_PATH/sra-toolkit-3.1.0.sif fasterq-dump --version
 
 for sample in $@; do
 
 echo "Downloading " $sample
-$CTN_PATH/sra-tools-3.1.1.sif fasterq-dump -O ./1-data $sample
+$CTN_PATH/sra-toolkit-3.1.0.sif fasterq-dump -O ./1-data $sample
 echo $sample " downloaded"
 
 done
