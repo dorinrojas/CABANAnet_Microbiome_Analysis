@@ -381,7 +381,16 @@ To activate the software, the envionment variable in which metaWRAP was installe
 (metawrap-env) [dorian.rojas@accessnode ~]$
 ```
 
-When running in the terminal, the name of the environment `metawrap-env` appears in front of the username. This indicates the env is activated and metaWRAP can be call normally. In the slurm file, the environment is activated within the job and metaWRAP will work correctly.
+When running in the terminal, the name of the environment `metawrap-env` appears in front of the username. This indicates the env is activated and metaWRAP can be call normally. In the slurm file, the environment is activated within the job by adding the `. ~/bin/miniforge3/bin/activate metawrap-env` before the `for` lop.
+
+There is an issue with the database paths of metawrap, particularly while calling the dabatase of the BMTagger tool that is used in the `read_qc` module. To fixed it the path needs to be manually modified by opening the `~/bin/metaWRAP/bin/config-metawrap` file (using `nano`). Search for `BMTAGGER_DB` entry and change the path to `/home/public/DB/BMTAGGER_INDEX`. It should look something like this:
+
+```vim
+# path to indexed human genome (see metaWRAP website for guide). This includes files hg38.bitmask and hg38.srprism.*
+BMTAGGER_DB=/home/public/DB/BMTAGGER_INDEX
+```
+
+The rest of the paths can be left the same as these wont be used during this workshop. After this changes, the metaWRAP software will work correctly.
 
 The first step prior to coding is understading how the module works. This is explored above. Subsequently, take a look at the usage of metaWRAP.
 
