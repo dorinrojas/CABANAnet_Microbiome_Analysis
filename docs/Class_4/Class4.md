@@ -496,11 +496,11 @@ Notice the `.csv` file were created by the python script. Hence, the output file
 
 The folder figures contain different images in `.pdf` format that favor the understand of the similarity relationship between the analyzed genomes. These correspond, for example, to the dendogram of the primary and secondary cluster. Below the example fo the dendrogram of the primary clusterng is presented, the dotted line represents the ANI threshold of 0.95,
 
-![Primary Clustering Dendogram](Secondary_clustering_dendrograms.pdf)
+![Primary Clustering Dendogram](Primary_clustering_dendrogram.jpg)
 
 Analyze the rest of the images and try to understand thei relevance for the analysis. In addition, an image representing the quality score of the cluster is presented with the selected (representative) genome marked with an *. This graph is presented in the `Cluster_scoring.pdf` file. This allows the user to easily identify that dRep selected the best genome
 
-![Cluster Scoring](Cluster_scoring.pdf)
+![Cluster Scoring](Cluster_scoring.png)
 
 Moreover, the `data_tables` folders contains the information generated to select the representatives genomes. The `log` folder contains the log files. The `data` folder includes the data greated during the workflo2 (e.g. ANI values). Finally, the `dereplicated_genomes` holds the sequences files of the representative genomes.
 
