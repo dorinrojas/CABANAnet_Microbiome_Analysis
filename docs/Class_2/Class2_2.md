@@ -286,7 +286,7 @@ Other bin refiners have been developed: [BASALT](https://github.com/EMBL-PKU/BAS
 
 ### MetaWRAP bin_refinement module
 
-MetaWRAP uses a hybrid approach to produce improved bins. The wrappers runs `binning_refiner` to hybridized every possible combinations of bins. For instance, if there are three bins (A, B, and C), the code results in sets AB, BC, AC, ABC. Thne, completion and contamination is evaluated for the original and hybrized bins using CheckM. To compare the bins, these are identified based on a minimum of 80% overlap in genome length, and the best bin is determined based on the quality score.
+MetaWRAP uses a hybrid approach to produce improved bins. The wrappers runs `binning_refiner` to hybridized every possible combinations of bins. For instance, if there are three bins (A, B, and C), the code results in sets AB, BC, AC, ABC. Then, completion and contamination is evaluated for the original and hybrized bins using CheckM. To compare the bins, these are identified based on a minimum of 80% overlap in genome length, and the best bin is determined based on the quality score.
 
 The quality score (QS) is a quality measure used for estimate high-quality MAGs (defined as QS>50). This parameter is calculated by:
 
@@ -342,8 +342,8 @@ The output from the refinement module consists in individual folders, `.contigs`
 (base) [dorian.rojas@accessnode test]$ ls -F 5-refin/SRR9988205_sub/*
 5-refin/SRR9988205_sub/concoct_bins.contigs  5-refin/SRR9988205_sub/metabat2_bins.contigs
 5-refin/SRR9988205_sub/concoct_bins.stats    5-refin/SRR9988205_sub/metabat2_bins.stats
-5-refin/SRR9988205_sub/maxbin2_bins.contigs  5-refin/SRR9988205_sub/metawrap_50_5_bins.contigs
-5-refin/SRR9988205_sub/maxbin2_bins.stats    5-refin/SRR9988205_sub/metawrap_50_5_bins.stats
+5-refin/SRR9988205_sub/maxbin2_bins.contigs  5-refin/SRR9988205_sub/metawrap_50_10_bins.contigs
+5-refin/SRR9988205_sub/maxbin2_bins.stats    5-refin/SRR9988205_sub/metawrap_50_10_bins.stats
 
 5-refin/SRR9988205_sub/concoct_bins:
 bin.0.fa  bin.2.fa  bin.37.fa  bin.42.fa  bin.44.fa  bin.49.fa  bin.53.fa  bin.59.fa  bin.60.fa
@@ -357,7 +357,7 @@ bin.0.fa  bin.1.fa  bin.2.fa
 5-refin/SRR9988205_sub/metabat2_bins:
 bin.1.fa  bin.2.fa  bin.3.fa  bin.unbinned.fa
 
-5-refin/SRR9988205_sub/metawrap_50_5_bins:
+5-refin/SRR9988205_sub/metawrap_50_10_bins:
 bin.1.fa  bin.2.fa
 
 5-refin/SRR9988205_sub/work_files:
@@ -367,7 +367,7 @@ binsAB/  binsABC.stats  binsAC/       binsA.stats   binsBC/  binsB.stats   binsC
 
 Explore the `.stats` file.
 
-metawrap_50_5_bins.stats:
+metawrap_50_10_bins.stats:
 
 ```vim
 bin     completeness    contamination   GC      lineage N50     size    binner
@@ -579,7 +579,7 @@ mkdir -p 5-refin/${sample}_sub
 
 metawrap bin_refinement -A 4-binning/${sample}_sub/metabat2_bins \
         -B 4-binning/${sample}_sub/maxbin2_bins -C 4-binning/${sample}_sub/concoct_bins \
-        -t 64 -x 5 -c 50 -o 5-refin/${sample}_sub
+        -t 64 -x 10 -c 50 -o 5-refin/${sample}_sub
 
 echo $sample " done"
 
@@ -618,7 +618,7 @@ metawrap reassemble_bins -o 6-reassemble/${sample}_sub \
         -b 5-refin/${sample}_sub/metawrap_50_5_bins \
         -1 2-read_qc/${sample}_sub/final_pure_reads_1.fastq \
         -2 2-read_qc/${sample}_sub/final_pure_reads_2.fastq \
-        -m 1000 -l 1000 -x 5 -c 50 -t 20
+        -m 1000 -l 1000 -x 10 -c 50 -t 20
 
 echo $sample " done"
 
