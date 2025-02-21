@@ -441,7 +441,7 @@ all_checkm2_for_drep.to_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/all_che
 
 The final output are several files in the `11-dRep` folder. The `all_checkm2_for_drep.csv` and `paths_genomes_for_drep.csv` are the inputs for the dRep analysis, it contains the quality information from CheckM2 and the path to the `.fasta` files of each bin.
 
-```bash 
+```bash
 (base) [dorian.rojas@accessnode 1-test-alejandra]$ ls 11-dRep/
 all_checkm2_for_drep.csv  for_drep.csv  paths_genomes_for_drep.csv
 
@@ -484,7 +484,42 @@ date
 time
 ```
 
-The output from the dRep analysis ___
+The output from the dRep analysis are several files and folders within the output folder.
+
+```bash
+(base) [dorian.rojas@accessnode 1-test-alejandra]$ ls 11-dRep/
+all_checkm2_for_drep.csv  data_tables           figures       log
+data                      dereplicated_genomes  for_drep.csv  paths_genomes_for_drep.csv
+```
+
+Notice the `.csv` file were created by the python script. Hence, the output files from dRep are within the new folders.
+
+The folder figures contain different images in `.pdf` format that favor the understand of the similarity relationship between the analyzed genomes. These correspond, for example, to the dendogram of the primary and secondary cluster. Below the example fo the dendrogram of the primary clusterng is presented, the dotted line represents the ANI threshold of 0.95,
+
+![Primary Clustering Dendogram](Secondary_clustering_dendrograms.pdf)
+
+Analyze the rest of the images and try to understand thei relevance for the analysis. In addition, an image representing the quality score of the cluster is presented with the selected (representative) genome marked with an *. This graph is presented in the `Cluster_scoring.pdf` file. This allows the user to easily identify that dRep selected the best genome
+
+![Cluster Scoring](Cluster_scoring.pdf)
+
+Moreover, the `data_tables` folders contains the information generated to select the representatives genomes. The `log` folder contains the log files. The `data` folder includes the data greated during the workflo2 (e.g. ANI values). Finally, the `dereplicated_genomes` holds the sequences files of the representative genomes.
+
+```bash
+(base) [dorian.rojas@accessnode 11-dRep]$ ls data_tables/
+Bdb.csv  Cdb.csv  genomeInfo.csv  genomeInformation.csv  Mdb.csv  Ndb.csv  Sdb.csv  Wdb.csv  Widb.csv
+
+(base) [dorian.rojas@accessnode 11-dRep]$ ls log/
+cluster_arguments.json  logger.log
+
+(base) [dorian.rojas@accessnode 11-dRep]$ ls dereplicated_genomes/
+49647_1#100_clean_bin.11_filtered_kept_contigs.fasta.gz
+49647_1#100_clean_bin.14_filtered_kept_contigs.fasta.gz
+49647_1#100_clean_bin.18_filtered_kept_contigs.fasta.gz
+49647_1#100_clean_bin.1_filtered_kept_contigs.fasta.gz
+[...]
+```
+
+The final results from this `dereplicated_genomes` are the one used for the abundance estimation.
 
 ## Functional annotation of MAGs (ABRicate, eggNOG-mapper)
 
