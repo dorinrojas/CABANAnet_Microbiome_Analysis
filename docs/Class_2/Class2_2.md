@@ -615,10 +615,10 @@ echo "Working on " $sample
 mkdir -p 6-reassemble/${sample}_sub
 
 metawrap reassemble_bins -o 6-reassemble/${sample}_sub \
-        -b 5-refin/${sample}_sub/metawrap_50_5_bins \
+        -b 5-refin/${sample}_sub/metawrap_50_10_bins \
         -1 2-read_qc/${sample}_sub/final_pure_reads_1.fastq \
         -2 2-read_qc/${sample}_sub/final_pure_reads_2.fastq \
-        -m 1000 -l 1000 -x 10 -c 50 -t 20
+        -m 1000 -l 1000 -x 10 -c 50 -t 64
 
 echo $sample " done"
 
