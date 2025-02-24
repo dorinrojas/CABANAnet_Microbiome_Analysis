@@ -360,7 +360,7 @@ This software is very complete for different kind of analysis. Therefore, it con
 
 The software requires the integration of CheckM data about completeness and contamination which could favor the accuracy of the process. This can be created through a simple python script.
 
-> This code is an modified example provided by the M.Sc Maria Alejandra Soto, a secondee from the project, for the demostrative purposes of the workshop.
+> This code is an modified example provided by the M.Sc. Maria Alejandra Soto, a secondee from the project, for the demostrative purposes of the workshop.
 
 ```python
 import glob
@@ -371,17 +371,17 @@ import os
 import shutil
 
 
-# Extract list of genomes (MAGs) not classified at the species level
+# Extract list of genomes (MAGs)
 ale_tax_classification = pd.read_csv('/home/dorian.rojas/1-test-alejandra/0-data/test_drep/mags_taxonomy_gtdb.csv')
 ale_tax_classification['classification'] = ale_tax_classification[['domain','phylum','class','order','family','genus','species']].agg(';'.join, axis = 1)
 ale_tax_classification['user_genome'] = ale_tax_classification['user_genome'] + '_filtered_kept_contigs.fasta.gz'
 ale_for_drep = ale_tax_classification[['user_genome', 'classification']]
- 
+
 example_tax_classification = pd.read_csv('/home/dorian.rojas/1-test-alejandra/10-gtdbtk/gtdbtk.bac120.summary.tsv', delimiter='\t')
 example_tax_classification['user_genome'] = example_tax_classification['user_genome'] + '_filtered_kept_contigs.fasta.gz'
 example_for_drep = example_tax_classification[['user_genome', 'classification']]
 
-# Saving as a new file in the drep folder 
+# Saving as a new file in the drep folder
 all_for_drep = pd.concat([example_for_drep, ale_for_drep], ignore_index=True)
 all_for_drep.to_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_drep.csv', index =False)
 
@@ -389,11 +389,11 @@ all_for_drep.to_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_drep.csv', 
 # Create a directory with the genomes files present in the previously generated list
 directories_to_search = ['/home/dorian.rojas/1-test-alejandra/6-mdmcleaner/bins', '/home/dorian.rojas/1-test-alejandra/0-data/test_drep/data']
 
-# Load the list of genomes to analize 
+# Load the list of genomes to analize
 for_drep = pd.read_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_drep.csv')
 
 # Create an output directory for the copied files
-  # I copied the files for organization purposes (notice it was created in the 9-final-MAGs folder). However, it is also recommended in case not all files were created by your username (e.g. public databases), this avoids permission issues. 
+  # I copied the files for organization purposes (notice it was created in the 9-final-MAGs folder). However, it is also recommended in case not all files were created by your username (e.g. public databases), this avoids permission issues.
    # This script can be modified so it does not copy the files but instead only creates the .csv file.
 output_directory = '/home/dorian.rojas/1-test-alejandra/9-final-MAGs/all_genomes'
 os.makedirs(output_directory, exist_ok=True)
@@ -423,7 +423,7 @@ genomes_to_find = pd.read_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_d
 # Changing column names for unification (genome, completness, contamination)
 checkm_sample = pd.read_csv('/home/dorian.rojas/1-test-alejandra/9-final-MAGs/final_mags.tsv', sep = '\t')
 checkm_sample['genome'] = checkm_sample['genome'].str.replace(r'_filtered_kept_contigs\.fasta$', '_filtered_kept_contigs.fasta.gz', regex=True)
-checkm_sample = checkm_sample.rename(columns = {'genome':'user_genome'}) 
+checkm_sample = checkm_sample.rename(columns = {'genome':'user_genome'})
 sample_checkm2_for_drep = checkm_sample[checkm_sample['user_genome'].isin(genomes_to_find['user_genome'])]
 
 ale_checkm = pd.read_csv('/home/dorian.rojas/1-test-alejandra/0-data/test_drep/mags_checkm2.csv')
@@ -445,9 +445,17 @@ The final output are several files in the `11-dRep` folder. The `all_checkm2_for
 (base) [dorian.rojas@accessnode 1-test-alejandra]$ ls 11-dRep/
 all_checkm2_for_drep.csv  for_drep.csv  paths_genomes_for_drep.csv
 
-(base) [dorian.rojas@accessnode 1-test-alejandra]$ head 11-dRep/all_checkm2_for_drep.csv 
+(base) [dorian.rojas@accessnode 1-test-alejandra]$ head 11-dRep/all_checkm2_for_drep.csv
 genome,completeness,contamination
-49647_1#2_clean_bin.19.orig_filtered_kept_contigs.fasta.gz,88.21,1.12
+49647_1#102_clean_bin.12_filtered_kept_contigs.fasta.gz,65.76,0.53
+49647_1#106_clean_bin.26_24_filtered_kept_contigs.fasta.gz,99.42,2.34
+49647_1#102_clean_bin.11_filtered_kept_contigs.fasta.gz,84.66,3.82
+49647_1#102_clean_bin.5_filtered_kept_contigs.fasta.gz,91.64,3.67
+49647_1#100_clean_bin.5_filtered_kept_contigs.fasta.gz,99.43,0.35
+49647_1#104_clean_bin.1_4_filtered_kept_contigs.fasta.gz,93.69,2.12
+49647_1#106_clean_bin.10_33_filtered_kept_contigs.fasta.gz,96.18,0.18
+49647_1#106_clean_bin.12_23_filtered_kept_contigs.fasta.gz,60.96,1.27
+49647_1#102_clean_bin.3_filtered_kept_contigs.fasta.gz,98.84,0.24
 ```
 
 Finally, the `drep.slurm` file can be completed. For this analysis we stabilish various flags. These include: `-g` to indicate the path files, `-p` for the threats, `-comp` for minimum completeness of 50, `-con` for maximum contamination of 5, `--S_ani` for 0.95 ANI threshold, `--cov_thresh` for 0.30 coverage threshold, `--S_algorithm` for ANI algorithm to use, and the `--genomeInfo` for the CheckM2 information.
@@ -519,7 +527,9 @@ cluster_arguments.json  logger.log
 [...]
 ```
 
-The final results from this `dereplicated_genomes` are the one used for the abundance estimation.
+The final results from this `dereplicated_genomes` are the one used for the abundance estimation and functional annotation.
+
+As previously mentioned, this part of the workshop is demonstrative as the datasets does not allow to perform dereplciation (due to the presence of only a few bins that do not require dereplication). Therefore, the following section will continue to be performed with the working samples.
 
 ## Functional annotation of MAGs (ABRicate, eggNOG-mapper)
 
@@ -538,17 +548,17 @@ mkdir -p 10-final-MAGs/bins
 
 # Select each of the bins that passed the GUNC analysis
 for file_name in $(awk '{print $2}' 10-final-MAGs/gtdb-input.txt); do
-  # Create a variable for the name of the (de)compressed bins
-  compressed="${file_name}_filtered_kept_contigs.fasta.gz"
-  newname="${file_name}_filtered_kept_contigs.fasta"
+        # Create a variable for the name of the (de)compressed bins
+        compressed="${file_name}_filtered_kept_contigs.fasta.gz"
+        newname="${file_name}_filtered_kept_contigs.fasta"
 
-  # Decompress the bins
-  gzip -dc 7-mdmcleaner/bins/$compressed > 7-mdmcleaner/bins/$newname
+        # Decompress the bins
+        gzip -dc 7-mdmcleaner/bins/$compressed > 7-mdmcleaner/bins/$newname
 
-  # Rename the contigs using the bbmap toolkit and output in general directory
-  $CTN_PATH/bbmap-39.10.sif rename.sh in=7-mdmcleaner/bins/$newname \
-  out=10-final-MAGs/bins/$newname prefix=$file_name
-done 
+        # Rename the contigs using the bbmap toolkit and output in general directory
+        $CTN_PATH/bbmap-39.10.sif rename.sh in=7-mdmcleaner/bins/$newname \
+        out=10-final-MAGs/bins/$newname prefix=$file_name
+done
 
 # Concatenate decompressed renamed files
 cat 10-final-MAGs/bins/*.fasta > 10-final-MAGs/bins/pangenome.fasta
@@ -625,17 +635,17 @@ import os
 import shutil
 
 
-# Extract list of genomes (MAGs) not classified at the species level
+# Extract list of genomes (MAGs)
 ale_tax_classification = pd.read_csv('/home/dorian.rojas/1-test-alejandra/0-data/test_drep/mags_taxonomy_gtdb.csv')
 ale_tax_classification['classification'] = ale_tax_classification[['domain','phylum','class','order','family','genus','species']].agg(';'.join, axis = 1)
 ale_tax_classification['user_genome'] = ale_tax_classification['user_genome'] + '_filtered_kept_contigs.fasta.gz'
 ale_for_drep = ale_tax_classification[['user_genome', 'classification']]
- 
+
 example_tax_classification = pd.read_csv('/home/dorian.rojas/1-test-alejandra/10-gtdbtk/gtdbtk.bac120.summary.tsv', delimiter='\t')
 example_tax_classification['user_genome'] = example_tax_classification['user_genome'] + '_filtered_kept_contigs.fasta.gz'
 example_for_drep = example_tax_classification[['user_genome', 'classification']]
 
-# Saving as a new file in the drep folder 
+# Saving as a new file in the drep folder
 all_for_drep = pd.concat([example_for_drep, ale_for_drep], ignore_index=True)
 all_for_drep.to_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_drep.csv', index =False)
 
@@ -643,11 +653,11 @@ all_for_drep.to_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_drep.csv', 
 # Create a directory with the genomes files present in the previously generated list
 directories_to_search = ['/home/dorian.rojas/1-test-alejandra/6-mdmcleaner/bins', '/home/dorian.rojas/1-test-alejandra/0-data/test_drep/data']
 
-# Load the list of genomes to analize 
+# Load the list of genomes to analize
 for_drep = pd.read_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_drep.csv')
 
 # Create an output directory for the copied files
-  # I copied the files for organization purposes (notice it was created in the 9-final-MAGs folder). However, it is also recommended in case not all files were created by your username (e.g. public databases), this avoids permission issues. 
+  # I copied the files for organization purposes (notice it was created in the 9-final-MAGs folder). However, it is also recommended in case not all files were created by your username (e.g. public databases), this avoids permission issues.
    # This script can be modified so it does not copy the files but instead only creates the .csv file.
 output_directory = '/home/dorian.rojas/1-test-alejandra/9-final-MAGs/all_genomes'
 os.makedirs(output_directory, exist_ok=True)
@@ -677,7 +687,7 @@ genomes_to_find = pd.read_csv('/home/dorian.rojas/1-test-alejandra/11-dRep/for_d
 # Changing column names for unification (genome, completness, contamination)
 checkm_sample = pd.read_csv('/home/dorian.rojas/1-test-alejandra/9-final-MAGs/final_mags.tsv', sep = '\t')
 checkm_sample['genome'] = checkm_sample['genome'].str.replace(r'_filtered_kept_contigs\.fasta$', '_filtered_kept_contigs.fasta.gz', regex=True)
-checkm_sample = checkm_sample.rename(columns = {'genome':'user_genome'}) 
+checkm_sample = checkm_sample.rename(columns = {'genome':'user_genome'})
 sample_checkm2_for_drep = checkm_sample[checkm_sample['user_genome'].isin(genomes_to_find['user_genome'])]
 
 ale_checkm = pd.read_csv('/home/dorian.rojas/1-test-alejandra/0-data/test_drep/mags_checkm2.csv')
@@ -736,17 +746,17 @@ mkdir -p 10-final-MAGs/bins
 
 # Select each of the bins that passed the GUNC analysis
 for file_name in $(awk '{print $2}' 10-final-MAGs/gtdb-input.txt); do
-  # Create a variable for the name of the (de)compressed bins
-  compressed="${file_name}_filtered_kept_contigs.fasta.gz"
-  newname="${file_name}_filtered_kept_contigs.fasta"
+        # Create a variable for the name of the (de)compressed bins
+        compressed="${file_name}_filtered_kept_contigs.fasta.gz"
+        newname="${file_name}_filtered_kept_contigs.fasta"
 
-  # Decompress the bins
-  gzip -dc 7-mdmcleaner/bins/$compressed > 7-mdmcleaner/bins/$newname
+        # Decompress the bins
+        gzip -dc 7-mdmcleaner/bins/$compressed > 7-mdmcleaner/bins/$newname
 
-  # Rename the contigs using the bbmap toolkit and output in general directory
-  $CTN_PATH/bbmap-39.10.sif rename.sh in=7-mdmcleaner/bins/$newname \
-  out=10-final-MAGs/bins/$newname prefix=$file_name
-done 
+        # Rename the contigs using the bbmap toolkit and output in general directory
+        $CTN_PATH/bbmap-39.10.sif rename.sh in=7-mdmcleaner/bins/$newname \
+        out=10-final-MAGs/bins/$newname prefix=$file_name
+done
 
 # Concatenate decompressed renamed files
 cat 10-final-MAGs/bins/*.fasta > 10-final-MAGs/bins/pangenome.fasta
@@ -754,6 +764,68 @@ cat 10-final-MAGs/bins/*.fasta > 10-final-MAGs/bins/pangenome.fasta
 
 **`abricate.slurm` file:**
 
+```vim
+#!/bin/bash
+#SBATCH --partition=parallel
+#SBATCH --account=parallel-24h
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=64
+#SBATCH --job-name="abricate"
+#SBATCH -o zz-%x-%j.o
+#SBATCH -e zz-%x-%j.e
+#SBATCH --mail-user=dorian.rojas@ucr.ac.cr
+#SBATCH --mail-type=END,FAIL
+
+cd /home/dorian.rojas/test
+
+CTN_PATH=/opt/ohpc/pub/containers/BIO/
+
+
+mkdir -p 12-abricate/
+
+for db in {argannot,card,ecoh,ecoli_vf,megares,ncbi,plasmidfinder,resfinder,vfdb}; do
+
+$CTN_PATH/abricate-1.0.1.sif abricate --threads 64 --db $db 10-final_MAGs/bins/pangenome.fasta \
+        >> 12-abricate/${db}.tab
+
+done
+
+$CTN_PATH/abricate-1.0.1.sif abricate --sumary 12-abricate/*.tab \
+        >> 12-abricate/summary.tab
+
+date
+time
+```
 
 **`eggnog-mapper.slurm` file:**
 
+```vim
+#!/bin/bash
+#SBATCH --partition=parallel
+#SBATCH --account=parallel-24h
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=64
+#SBATCH --job-name="eggnog"
+#SBATCH -o zz-%x-%j.o
+#SBATCH -e zz-%x-%j.e
+#SBATCH --mail-user=dorian.rojas@ucr.ac.cr
+#SBATCH --mail-type=END,FAIL
+
+cd /home/dorian.rojas/test
+
+CTN_PATH=/opt/ohpc/pub/containers/BIO/
+
+
+mkdir -p 13-eggnog/
+
+
+$CTN_PATH/eggnog-mapper-2.1.12.sif emapper.py --cpu 64 -i 10-final_MAGs/bins/pangenome.fasta \
+        --itype metagenome --genepred prodigal \
+        --output_dir 13-eggnog/ --temp_dir 13-eggnog/
+
+
+date
+time
+```

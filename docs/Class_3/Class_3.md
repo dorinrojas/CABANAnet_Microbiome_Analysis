@@ -39,7 +39,18 @@ In this regard, CheckM2 does a similar job to CheckM but with improved and more 
 
 > Prior running the MAGs processing, the MDMcleaner database must be downloaded and directory set in the configuration. This might take a while (>13 hours). Thus, it was previously installed and set for usage.
 
-The workflow was designed to accept both Single Amplified Genomes (SAGs) and MAGs. Therefore, MDMcleaner holds multiple commands. MDMcleaner is installed under the base mamba environment. Thus, it is not required to activate any environment. If your mamba is within any envs, please use the command `mamba deactivate` and check the status of the username is under `base`.
+The workflow was designed to accept both Single Amplified Genomes (SAGs) and MAGs. Therefore, MDMcleaner holds multiple commands. MDMcleaner has to be individually installed under the base mamba environment. For this, create a `.sh` file similar to the one used to install metaWRAP. This can be named as `MDMcleaner_install.sh`. Copy and paste the code below and run using `sh MDMcleaner_install.sh`. Make sure to be in the `(base)` environment prior to compile the shell script (use `conda deactivate` if you have any environment activated).
+
+```vim
+#!/bin/bash
+conda create -n mdmcleaner
+conda install -c bioconda -n mdmcleaner
+conda activate mdmcleaner
+```
+
+This short script will create a new environment named `mdmcleaner` (`conda create...`) and install the MDMcleaner software extracted from the bioconda channel (`conda install...`). Finally the environment will be automatically activated. For any further use, by running `conda activate mdmcleaner` in the console, this environment will work correctly.
+
+Run the basic mdmclenaer command and check the options.
 
 ```bash
 (base) [dorian.rojas@accessnode ~]$ mdmcleaner -h
