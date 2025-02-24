@@ -168,7 +168,9 @@ MetaWRAP module have the options to conduct a CheckM analysis in the final bins.
 
 ### Running metawrap binning
 
-Call the binning module in the terminal and explore the flags.
+Prior to run this module, the database for CheckM needs to be set in each individual conda environments. For this, create a directory named databases and perform a recursive copy on this folder `/home/public/DB/MY_CHECKM_DB/`. After this, call the `checkm` command in the console and write the path to where the database was stored.
+
+Now, call the binning module in the terminal and explore the flags.
 
 ```bash
 (metawrap-env) [dorian.rojas@accessnode test]$ metawrap binning -h

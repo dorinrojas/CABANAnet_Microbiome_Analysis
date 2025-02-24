@@ -280,7 +280,7 @@ options:
 
 Notice the default for GUNC is the suffix `.fa`. Therefore, `-e` command is required to indicate the mdmcleaner results files.
 
-Moreover, the database for the gunc software needs to be indicated in the command through the `-r` flag. This db is presented in the path `/home/public/DB/gunc_db_progenomes2.1.dmnd`.
+Moreover, the database for the gunc is located in `/home/public/met-workshop/databases/gunc_db_progenomes2.1.dmnd`. It needs to be copied to the database folder in the user (similar to how it was performed with CheckM while running metaWRAP binning module). After this, the path to this database must be indicated in the code using the `-r` command.
 
 Additionally, the results from mdmcleaner are presented in different subfolders for each bins. These need to be copied into a single subfolder to be used as the input for the gunc command (`-d` flag). In this subfolder, the names of each bins require to have the the prefix with the sample code. For this, the following code must be added after before running.
 
@@ -404,7 +404,7 @@ additional arguments:
 
 Do not get overwhelmed by the large help message, the command is very simple, check the usage example first. In this case the default extension for the files is `.fna`. Hence, the `.gz` of the mdmcleaner results should be specificed in the CheckM2 command with the `-x` flags.
 
-The database for CheckM2 must be indicated in the predict command. The path is `/home/dorian.rojas/DB/CheckM2_database/uniref100.KO.1.dmnd`.
+The database for CheckM2 must be indicated in the predict command. First, copy recursive the database `/home/public/DB/CheckM2_database/` in each user database folder and through the `--database_path` to specify this location in the code.
 
 Code for a prediction analysis of the same bins used for the GUNC assessment and set the threats to the maximum to ensure a faster running. Save the results in a folder named `9-checkm2`.
 
