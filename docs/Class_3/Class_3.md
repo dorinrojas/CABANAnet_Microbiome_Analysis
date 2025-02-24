@@ -44,7 +44,7 @@ The workflow was designed to accept both Single Amplified Genomes (SAGs) and MAG
 ```vim
 #!/bin/bash
 conda create -n mdmcleaner
-conda install -c bioconda -n mdmcleaner
+conda install -c bioconda mdmcleaner -n mdmcleaner
 conda activate mdmcleaner
 ```
 
