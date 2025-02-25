@@ -137,7 +137,7 @@ options:
                         contaminations will not be verified)
 ```
 
-MDMcleaner outputs overview files of the complete process and the `mdmcleane.config` file where the database and other commands are indicated. These are created in the working directory. Therefore, to avoid each of the samples to overwrite the results, the working directory must change. This would also require to direct the `clean` command to the complete path of the input files. You can set this with a variable to make the code shorter. The for loop should look something simialr to the example below:
+MDMcleaner outputs overview files of the complete process and the `mdmcleaner.config` file where the database and other commands are indicated. These are created in the working directory. Therefore, to avoid each of the samples to overwrite the results, the working directory must change. This would also require to direct the `clean` command to the complete path of the input files. You can set this with a variable to make the code shorter. The for loop should look something simialr to the example below:
 
 ```vim
 cd /home/dorian.rojas/test

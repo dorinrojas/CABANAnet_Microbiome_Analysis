@@ -574,20 +574,417 @@ Several tools have been developed for this approach. For instance, the Comprehen
 
 > The authors defined the etymology as "Anti-Biotic Resistance" in the form of an English verb to represent the software taking action against the antibiotic resistance. They also stated that "[it] is unlikely to receive an infamous [JABBA AWARD](http://www.acgt.me/blog/2014/12/1/time-for-a-new-jabba-award-for-just-another-bogus-bioinformatics-acronym) (Just Another Bogus Bioinformatics Acronym Award).
 
+Moreover, another interesting feature to analyze in the microbiome is the potential metabolic processes encoded in the identified bacteria. These are considered 'potential' as the genomic data can not ensure that these are being expressed.
+
+Similarly to the clinical feature, a vast variety of tools with different methodologies have been developed to perform metabolic annotations. For instance, the software [HUMAnN](https://github.com/biobakery/humann) (HMP Unified Metabolic Analysis Network) has been widely used in this regard. This is an efficient tools for profiling the abundace of microbial metabolic pathways and other molecular functions from metagenomics or metatranscriptomics data.
+
+During this workshop, the software [eggNOG-mapper](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#user-content-Basic_usage) will be used. This software performs annotation based on its own database of precomputed orthologous groups (OG) and phylogenies. Such approach, avoids biases based on taxonomic profiling. For this, fasta files are translated into protens using Prodigal and the output is aligned to the eggNOG database using either HMMER3, DIAMOND, or MMseqs2. The orthology is infered based on the selected taxonomy (eukaryota, bacteria, archaea, virus) and finally OGs are annotated based on different databases (e.g. GeneOntology, Pfam, KEGG...).
+
+>Interestingly, eggNOG-mapper seems to have a higher annotation rate in comparison to HUMAnN, as it allows the identification based on OGs instead of species identification [(Mi et al. 2024)](https://www.sciencedirect.com/science/article/pii/S2667237524003229). This allows the inclusion of novel, uncultured, poorly represented species, among others.
+
 ### Running abricate
 
 This software is installed as a container and is simple to use. The only issue is that in order run multiple databases at the same time, a bash `for` loop must be used as the toolf does not accept various databases simultaneously.
 
+>Please ignore a perl error if it appears. This should not affect the pipeline.
+
 ```bash
+(base) [dorian.rojas@accessnode 1-test-alejandra]$ /opt/ohpc/pub/containers/BIO/abricate-1.0.1.sif abricate -h
+SYNOPSIS
+  Find and collate amplicons in assembled contigs
+AUTHOR
+  Torsten Seemann (@torstenseemann)
+USAGE
+  % abricate --list
+  % abricate [options] <contigs.{fasta,gbk,embl}[.gz] ...> > out.tab
+  % abricate [options] --fofn fileOfFilenames.txt > out.tab
+  % abricate --summary <out1.tab> <out2.tab> <out3.tab> ... > summary.tab
+GENERAL
+  --help          This help.
+  --debug         Verbose debug output.
+  --quiet         Quiet mode, no stderr output.
+  --version       Print version and exit.
+  --check         Check dependencies are installed.
+  --threads [N]   Use this many BLAST+ threads [1].
+  --fofn [X]      Run on files listed in this file [].
+DATABASES
+  --setupdb       Format all the BLAST databases.
+  --list          List included databases.
+  --datadir [X]   Databases folder [/usr/local/db].
+  --db [X]        Database to use [ncbi].
+OUTPUT
+  --noheader      Suppress column header row.
+  --csv           Output CSV instead of TSV.
+  --nopath        Strip filename paths from FILE column.
+FILTERING
+  --minid [n.n]   Minimum DNA %identity [80].
+  --mincov [n.n]  Minimum DNA %coverage [80].
+MODE
+  --summary       Summarize multiple reports into a table.
+DOCUMENTATION
+  https://github.com/tseemann/abricate
 ```
 
-Code for a simple annotation using all the available databases by the software.
+The available databases to be used with abricate can be explored with the `--list` command.
 
-The output from the analysis is a `.tsv` table with several columns that indicate the name of the file, contigs in which the hit was detected, gene, coverage, database, among others. Notice the use of the pangenome file for this analysis facilitates the running code. However, the rename of the contigs headers was required to further associated the identified hits to a particular bin.
+```bash
+(base) [dorian.rojas@accessnode 1-test-alejandra]$ /opt/ohpc/pub/containers/BIO/abricate-1.0.1.sif abricate --list
+DATABASE        SEQUENCES       DBTYPE  DATE
+argannot        2223    nucl    2024-Dec-15
+card    2631    nucl    2024-Dec-15
+ecoh    597     nucl    2024-Dec-15
+ecoli_vf        2701    nucl    2024-Dec-15
+megares 6635    nucl    2024-Dec-15
+ncbi    5386    nucl    2024-Dec-15
+plasmidfinder   460     nucl    2024-Dec-15
+resfinder       3077    nucl    2024-Dec-15
+vfdb    2597    nucl    2024-Dec-15
+```
+
+Code for a simple annotation using all the available databases by the software. The output should be indicated using `>>`. Hence, it is recommeded to add an additional `abricate summary [...]` after the `for` loop has finished. This will provide a summary of the databases that can be easier to interpret.
+
+> If the job takes a while running, the results in the common repository `/home/public/met-workshop`
+
+The output from the analysis is a `.tab` table with several columns that indicate the name of the file, contigs in which the hit was detected, gene, coverage, database, among others. One file is generated per databaase used, and an additional summary file has the complete information. Notice the use of the pangenome file for this analysis facilitates the running code. However, the rename of the contigs headers was required to further associated the identified hits to a particular bin.
+
+```bash
+(base) [dorian.rojas@accessnode test]$ ls 12-abricate/
+argannot.tab  card.tab  ecoh.tab  ecoli_vf.tab  megares.tab  ncbi.tab  plasmidfinder.tab  resfinder.tab  summary.tab  vfdb.tab
+```
+
+In this case, no annotations were found in the pangenome. This could be expected considering the small bins and subsampled used for this workshop. However, to have an idea of how a positive result from ABRicate looks, find below and example from the example dataset used for the previous dereplication step.
+
+This is the `argannot.tab` file. The `FILE` and `SEQUENCE` indicate the file and contig in which the genomic feature was annotation that starts from base pair shown in the `START` and `END`. The found gene, accession, and product resistance are indicated in the `GENE`, `DATABASE ACCESSION`, and `PRODUCT RESISTANCE` columns, respectively.
+
+```bash
+(base) [dorian.rojas@accessnode 1-test-alejandra]$ head 12-abricate/argannot.tab
+#FILE   SEQUENCE        START   END     STRAND  GENE    COVERAGE        COVERAGE_MAP    GAPS    %COVERAGE       %IDENTITY       DATABASE ACCESSION       PRODUCT RESISTANCE
+11-dRep/for_pangenome/pangenome.fasta   49647_1#102_clean_bin.12_146    57      1023    -       (Bla)cfxA6      30-996/996      ===============  0/0     97.09   99.79   argannot        GQ342996:798-1793       (Bla)cfxA6
+11-dRep/for_pangenome/pangenome.fasta   49647_1#102_clean_bin.12_49     73      1290    +       (MLS)mef(A)     1-1218/1218     ===============  0/0     100.00  95.07   argannot        U70055:314-1531 (MLS)mef(A)
+11-dRep/for_pangenome/pangenome.fasta   49647_1#102_clean_bin.12_56     3848    5053    -       (MLS)Mef(En2)   1-1206/1206     ===============  0/0     100.00  99.83   argannot        NG_047980:101-1306      (MLS)Mef(En2)
+11-dRep/for_pangenome/pangenome.fasta   49647_1#102_clean_bin.12_filtered_kept_contigs_c_000000000099   73      1290    +       (MLS)mef(A)      1-1218/1218     =============== 0/0     100.00  95.07   argannot        U70055:314-1531 (MLS)mef(A)
+11-dRep/for_pangenome/pangenome.fasta   49647_1#102_clean_bin.12_filtered_kept_contigs_c_000000000113   3848    5053    -       (MLS)Mef(En2)    1-1206/1206     =============== 0/0     100.00  99.83   argannot        NG_047980:101-1306      (MLS)Mef(En2)
+11-dRep/for_pangenome/pangenome.fasta   49647_1#102_clean_bin.12_filtered_kept_contigs_c_000000000293   57      1023    -       (Bla)cfxA6       30-996/996      =============== 0/0     97.09   99.79   argannot        GQ342996:798-1793       (Bla)cfxA6
+11-dRep/for_pangenome/pangenome.fasta   49647_1#106_clean_bin.26_24_14  694     2613    +       (Tet)tetM       1-1920/1920     ===============  0/0     100.00  97.24   argannot        DQ534550:1451-3370      (Tet)tetM
+11-dRep/for_pangenome/pangenome.fasta   49647_1#106_clean_bin.26_24_filtered_kept_contigs_c_000000000030        694     2613    +(Tet)tetM       1-1920/1920     =============== 0/0     100.00  97.24   argannot        DQ534550:1451-3370      (Tet)tetM
+11-dRep/for_pangenome/pangenome.fasta   49647_1#2_clean_bin.21.orig_5   56031   56525   -       (MLS)lnu(C)     1-495/495       ===============  0/0     100.00  98.18   argannot        AY928180:1150-1644      (MLS)lnu(C)
+```
+
+The `summary.tab` is similar. In this case, total annotations and all the annotated genes are presented as columns. The rows represent each `.tab` file per database and the coverage found for the respective gene.
+
+```vim
+#FILE   NUM_FOUND       (Bla)AmpC1_Ecoli        (Bla)AmpC2_Ecoli        (Bla)Penicillin_Binding_Protein_Ecoli   (Bla)ampH_Ecoli (Bla)cfxA6       (MLS)Mef(En2)   (MLS)lnu(C)     (MLS)mef(A)     (Tet)tetM       (Tet)tetQ       (Tmt)dfrF       ACRA    ACRB    ACRD     ACRE    ACRF    ACRS    AMPH    ANT6    ANT9    ASMA    BACA    BAER    BAES    BCR     BLAEC   CFX     CPXAR   CRP     CTX      CfxA6   DFRF    ECS88_3547      ECs3712 EMRA    EMRB    EMRD    EMRK    EMRR    EMRY    EPTA    EVGS    Escherichia_coli_acrA    Escherichia_coli_ampC   Escherichia_coli_ampC1_beta-lactamase   Escherichia_coli_ampH   Escherichia_coli_emrE   Escherichia_coli_mdfA    GADW    GADX    H-NS    HNS     IncFIA(HI1)_1_HI1       IncFIB(K)_1_Kpn3        IncR_1  IncX1_1 KDPE    LNUA    LNUC     MARA    MARR    MDFA    MDTA    MDTB    MDTC    MDTE    MDTF    MDTG    MDTH    MDTI    MDTJ    MDTK    MDTM    MDTN    MDTO     MDTP    MEFA    MEFE    MPHB    MSBA    MVRC    Mef(En2)        PBP2    PBP4B   PMRF    ROBA    SOXS    TETM    TETQ    UMNK88_238       YOGI    Z0263   Z0265   Z1307   Z2200   Z2201   Z2204   Z2206   aad9    aadE    acrB    acrD    acrE    acrF    acrS     aec17   aec18   aec19   aec22   aec23   aec24   aec25   aec26   aec28   aec29   aec30   aec31   aec32   ant(6)-Ia_3     artj     b2854   b2972   bacA    baeR    baeS    blaEC-18        cadA    cfaA    cfaB    cfaC    cfaD    cfxA6   cfxA6_1 cheA    cheB     cheR    cheW    cheY    cheZ    clpV    cpxA    csgA    csgB    csgC    csgD    csgE    csgF    csgG    dfrF    eaeH    ecpA     ecpB    ecpC    ecpD    ecpR    ehaA    emrA    emrB    emrK    emrR    emrY    entA    entB    entC    entD    entE    entF     entS    epaO    epaP    epaQ    epaR    epaS    eprH    eprI    eprJ    eprK    eptA    espL1   espL3   espL4   espR1   espX1    espX4   espX5   etrA    evgA    evgS    fdeC    fepA    fepB    fepC    fepD    fepE    fepG    fes     fimD    fimF    fimG     fimH    flgA    flgB    flgC    flgD    flgE    flgF    flgG    flgH    flgI    flgJ    flgK    flgL    flgN    flhA    flhB     flhC    flhD    flhE    fliA    fliC-H4 fliE    fliF    fliG    fliH    fliI    fliJ    fliK    fliL    fliM    fliN    fliO     fliP    fliQ    fliR    fliS    fliT    fliY    fliZ    flk     gadW    gadX    gspC    gspD    gspE    gspF    gspG    gspH     gspI    gspJ    gspK    gspL    gspM    hcp     hlyE    hofB    hofC    hofq    ibeC    kdpE    lnu(AN2)        lnu(C)  lnu(C)_1 lnuC    lpfao113        marA    matF    mdf(A)_1        mdtA    mdtB    mdtC    mdtE    mdtF    mdtG    mdtH    mdtM    mdtN     mdtO    mdtP    mef(A)  mef(A)_3        mef(En2)        mel     motA    motB    mphB    msbA    mtfa    nada    nadb    ompA     orgA    orgB    pmrF    ppdD    ppda    ppdb    ppdc    stgC    stgD    tar/cheM        tet(M)  tet(M)_12       tet(Q)  tet(Q)_1 tetM    tetQ    tia     tolC    upaG/ehaG       vgrG    wzm-O9  wzt-O9  yagV/ecpE       yagW/ecpD       yagX/ecpC       yagY/ecpB        yagZ/ecpA       ycbF    ycbQ    ycbR    ycbS    ycbT    ycbU    ycbV    ycfz    ygdb    ygeG    ygeH    yggr    yghg     ykgK/ecpR       yojI
+12-abricate/argannot.tab        11      100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   97.09;97.09     100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .
+12-abricate/card.tab    52      .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       100.00;100.00    .       97.09;97.09     .       .       .       .       .       .       .       .       .       .       .       100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       100.00;100.00   .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       100.00;100.00   .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       99.76;99.76     100.00;100.00   100.00;100.00   .       .       ..       .       .       .       .       .       .       .       .       .       .       .       100.00;100.00   .       .       ..       .       .       .       100.00;100.00   .       .       .       .       .       .       .       100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       100.00;100.00   .       .       .       .       .       .       .       .       100.00;100.00    100.00;100.00   .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       100.00;100.00   100.00;100.00   .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       99.26;99.26     .       .       .       100.00;100.00   .       100.00;100.00    .       .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       100.00;100.00   .       .100.00;100.00   100.00;100.00   .       .       .       .       .       .       100.00;100.00   .       .       .       .       ..       .       .       .       .       .       100.00;100.00   100.00;100.00   .       100.00;100.00   .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       100.00;100.00
+12-abricate/ecoh.tab    3       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       100.00;100.00   .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       100.00;100.00   100.00;100.00   .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .
+12-abricate/ecoli_vf.tab        175     .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       100.00;100.00   100.00;100.00   .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       100.00;100.00   .       100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       ..       .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       100.00;100.00   100.00;100.00    100.00;100.00   .       .       .       .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    .       .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    .       99.35;99.35     100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       ..       .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   99.28;99.28     100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   99.15;99.15     99.91;99.91     100.00;100.00   100.00;100.00   99.70;99.70     100.00;100.00    .       100.00;100.00   100.00;100.00   99.94;99.94     100.00;100.00   100.00;100.00   99.94;99.94     100.00;100.00    100.00;100.00   .       .       .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00;100.00;100.00     100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   99.90;99.90     100.00;100.00   100.00;100.00   99.72;99.72     100.00;100.00    100.00;100.00   .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   99.90;99.90     .       100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   99.67;99.67     100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   ..       .       .       .       100.00;100.00   .       100.00;100.00   .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       100.00;100.00   100.00;100.00   .       .       100.00;100.00   100.00;100.00    100.00;100.00   .       100.00;100.00   100.00;100.00   .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       .       .       100.00;100.00   .100.00;100.00   100.00;100.00   .       .       .       .       .       .       .       100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   99.87;99.87     100.00;100.00   98.98;98.98     100.00;100.00    100.00;100.00   100.00;100.00   .       .
+12-abricate/megares.tab 64      .       .       .       .       .       .       .       .       .       .       .       100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    99.95;99.95     99.76;99.76     100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   97.09;97.09     100.00;100.00;100.00;100.00      100.00;100.00   99.79;100.00;99.79;100.00       .       100.00;100.00   .       .       100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       ..       .       .       100.00;100.00   100.00;100.00   .       100.00;100.00   .       .       .       .       99.26;99.26     100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   99.51;99.51     100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   99.85;99.85     .       100.00;100.00    .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .
+12-abricate/ncbi.tab    11      .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .100.00;100.00   100.00;100.00   .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       100.00;100.00   .       .       ..       .       100.00;100.00   .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       100.00;100.00   .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       100.00;100.00   100.00;100.00    .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       99.51;99.51     .       100.00;100.00   .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       100.00;100.00   .       100.00;100.00   .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .
+12-abricate/plasmidfinder.tab   4       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..
+12-abricate/resfinder.tab       7       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       100.00;100.00   .       .       .       .       .       .       .       .       .       .       ..       .       97.09;97.09     .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       100.00;100.00   .       ..       .       100.00;100.00   .       .       .       .       .       .       .       .       .       .       .       .       100.00;100.00    .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       100.00;100.00   .       100.00;100.00   .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .
+12-abricate/vfdb.tab    44      .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       99.78;99.78     .       100.00;100.00   .       99.04;99.04      100.00;100.00   .       .       .       .       .       .       .       .       .       .       .       .       .100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   99.28;99.28     100.00;100.00   .       .       ..       .       .       .       .       .       .       100.00;100.00   .       .       83.81;83.81     100.00;100.00   99.94;99.94      100.00;100.00   .       .       .       99.76;99.76     100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .100.00;100.00   100.00;100.00   .       100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00    100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       ..       .       .       .       .       .       .       .       .       .       100.00;100.00   .       .       .       .       ..       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .99.74;99.74     100.00;100.00   100.00;100.00   100.00;100.00   100.00;100.00   .       .       .       .       .       .       ..       .       .       .       .       .       100.00;100.00   .
+```
+
+It is important to mention that although the `summary.tab` file might come handy to have a general perspective of what is annotated in the pangenome. This file does not provide an indicative of which sample/bin presents the encoded gene. Therefore, this can not be used to analyze the difference in these genomic features according to the sample. Performing a simple `cat` of all the different `$db.tab` files could be a better approach.
 
 ### Running eggnog-mapper
 
-[]
+This software is also known as `emapper.py` or just emapper as this is its call command. It is installed as a contains and presents a great variety of options that favor the selection of user-specific preferences for different type of analysis.
+
+```bash
+(base) [dorian.rojas@accessnode ~]$ /opt/ohpc/pub/containers/BIO/eggnog-mapper-2.1.12.sif emapper.py -h
+usage: emapper.py [-h] [-v] [--list_taxa] [--cpu NUM_CPU] [--mp_start_method {fork,spawn,forkserver}] [--resume] [--override]
+                  [-i FASTA_FILE] [--itype {CDS,proteins,genome,metagenome}] [--translate]
+                  [--annotate_hits_table SEED_ORTHOLOGS_FILE] [-c FILE] [--data_dir DIR] [--genepred {search,prodigal}]
+                  [--trans_table TRANS_TABLE_CODE] [--training_genome FILE] [--training_file FILE]
+                  [--allow_overlaps {none,strand,diff_frame,all}] [--overlap_tol FLOAT]
+                  [-m {diamond,mmseqs,hmmer,no_search,cache,novel_fams}] [--pident PIDENT] [--query_cover QUERY_COVER]
+                  [--subject_cover SUBJECT_COVER] [--evalue EVALUE] [--score SCORE] [--dmnd_algo {auto,0,1,ctg}]
+                  [--dmnd_db DMND_DB_FILE]
+                  [--sensmode {default,fast,mid-sensitive,sensitive,more-sensitive,very-sensitive,ultra-sensitive}]
+                  [--dmnd_iterate {yes,no}] [--matrix {BLOSUM62,BLOSUM90,BLOSUM80,BLOSUM50,BLOSUM45,PAM250,PAM70,PAM30}]
+                  [--dmnd_frameshift DMND_FRAMESHIFT] [--gapopen GAPOPEN] [--gapextend GAPEXTEND] [--block_size BLOCK_SIZE]
+                  [--index_chunks CHUNKS] [--outfmt_short] [--dmnd_ignore_warnings] [--mmseqs_db MMSEQS_DB_FILE]
+                  [--start_sens START_SENS] [--sens_steps SENS_STEPS] [--final_sens FINAL_SENS] [--mmseqs_sub_mat SUBS_MATRIX]
+                  [-d HMMER_DB_PREFIX] [--servers_list FILE] [--qtype {hmm,seq}] [--dbtype {hmmdb,seqdb}] [--usemem] [-p PORT]
+                  [--end_port PORT] [--num_servers NUM_SERVERS] [--num_workers NUM_WORKERS]
+                  [--timeout_load_server TIMEOUT_LOAD_SERVER] [--hmm_maxhits MAXHITS] [--report_no_hits]
+                  [--hmm_maxseqlen MAXSEQLEN] [--Z DB_SIZE] [--cut_ga]
+                  [--clean_overlaps none|all|clans|hmmsearch_all|hmmsearch_clans] [--no_annot] [--dbmem]
+                  [--seed_ortholog_evalue MIN_E-VALUE] [--seed_ortholog_score MIN_SCORE] [--tax_scope TAX_SCOPE]
+                  [--tax_scope_mode TAX_SCOPE_MODE] [--target_orthologs {one2one,many2one,one2many,many2many,all}]
+                  [--target_taxa LIST_OF_TAX_IDS] [--excluded_taxa LIST_OF_TAX_IDS] [--report_orthologs]
+                  [--go_evidence {experimental,non-electronic,all}] [--pfam_realign {none,realign,denovo}] [--md5]
+                  [--output FILE_PREFIX] [--output_dir DIR] [--scratch_dir DIR] [--temp_dir DIR] [--no_file_comments]
+                  [--decorate_gff DECORATE_GFF] [--decorate_gff_ID_field DECORATE_GFF_ID_FIELD] [--excel]
+
+options:
+  -h, --help            show this help message and exit
+  -v, --version         show version and exit. (default: False)
+  --list_taxa           List taxa available for --tax_scope/--tax_scope_mode, and exit (default: False)
+
+Execution Options:
+  --cpu NUM_CPU         Number of CPUs to be used. --cpu 0 to run with all available CPUs. (default: 1)
+  --mp_start_method {fork,spawn,forkserver}
+                        Sets the python multiprocessing start method. Check
+                        https://docs.python.org/3/library/multiprocessing.html. Only use if the default method is not working
+                        properly in your OS. (default: spawn)
+  --resume              Resumes a previous emapper run, skipping results in existing output files. (default: False)
+  --override            Overwrites output files if they exist. By default, execution is aborted if conflicting files are
+                        detected. (default: False)
+
+Input Data Options:
+  -i FASTA_FILE         Input FASTA file containing query sequences (proteins by default; see --itype and --translate).
+                        Required unless -m no_search. (default: None)
+  --itype {CDS,proteins,genome,metagenome}
+                        Type of data in the input (-i) file. (default: proteins)
+  --translate           When --itype CDS, translate CDS to proteins before search. When --itype genome/metagenome and
+                        --genepred search, translate predicted CDS from blastx hits to proteins. (default: False)
+  --annotate_hits_table SEED_ORTHOLOGS_FILE
+                        Annotate TSV formatted table with 4 fields: query, hit, evalue, score. Usually, a .seed_orthologs file
+                        from a previous emapper.py run. Requires -m no_search. (default: None)
+  -c FILE, --cache FILE
+                        File containing annotations and md5 hashes of queries, to be used as cache. Required if -m cache
+                        (default: None)
+  --data_dir DIR        Path to eggnog-mapper databases. By default, "data/" or the path specified in the environment variable
+                        EGGNOG_DATA_DIR. (default: None)
+
+Gene Prediction Options:
+  --genepred {search,prodigal}
+                        This is applied when --itype genome or --itype metagenome. search: gene prediction is inferred from
+                        Diamond/MMseqs2 blastx hits. prodigal: gene prediction is performed using Prodigal. (default: search)
+  --trans_table TRANS_TABLE_CODE
+                        This option will be used for Prodigal, Diamond or MMseqs2, depending on the mode. For Diamond searches,
+                        this option corresponds to the --query-gencode option. For MMseqs2 searches, this option corresponds to
+                        the --translation-table option. For Prodigal, this option corresponds to the -g/--trans_table option.
+                        It is also used when --translate, check
+                        https://biopython.org/docs/1.75/api/Bio.Seq.html#Bio.Seq.Seq.translate. Default is the corresponding
+                        programs defaults. (default: None)
+  --training_genome FILE
+                        A genome to run Prodigal in training mode. If this parameter is used, Prodigal will run in two steps:
+                        firstly in training mode, and secondly using the training to analize the emapper input data. See
+                        Prodigal documentation about Traning mode for more info. Only used if --genepred prodigal. (default:
+                        None)
+  --training_file FILE  A training file from Prodigal training mode. If this parameter is used, Prodigal will run using this
+                        training file to analyze the emapper input data. Only used if --genepred prodigal. (default: None)
+  --allow_overlaps {none,strand,diff_frame,all}
+                        When using 'blastx'-based genepred (--genepred search --itype genome/metagenome) this option controls
+                        whether overlapping hits are reported or not, or if only those overlapping hits in a different strand
+                        or frame are reported. Also, the degree of accepted overlap can be controlled with --overlap_tol.
+                        (default: none)
+  --overlap_tol FLOAT   This value (0-1) is the proportion such that if (overlap size / hit length) > overlap_tol, hits are
+                        considered to overlap. e.g: if overlap_tol is 0.0, any overlap is considered as such. e.g: if
+                        overlap_tol is 1.0, one of the hits must overlap entirely to consider that hits do overlap. (default:
+                        0.0)
+
+Search Options:
+  -m {diamond,mmseqs,hmmer,no_search,cache,novel_fams}
+                        diamond: search seed orthologs using diamond (-i is required). mmseqs: search seed orthologs using
+                        MMseqs2 (-i is required). hmmer: search seed orthologs using HMMER. (-i is required). no_search: skip
+                        seed orthologs search (--annotate_hits_table is required, unless --no_annot). cache: skip seed
+                        orthologs search and annotate based on cached results (-i and -c are required).novel_fams: search
+                        against the novel families database (-i is required). (default: diamond)
+
+Search filtering common options:
+  --pident PIDENT       Report only alignments above or equal to the given percentage of identity (0-100).No effect if -m
+                        hmmer. (default: None)
+  --query_cover QUERY_COVER
+                        Report only alignments above or equal the given percentage of query cover (0-100).No effect if -m
+                        hmmer. (default: None)
+  --subject_cover SUBJECT_COVER
+                        Report only alignments above or equal the given percentage of subject cover (0-100).No effect if -m
+                        hmmer. (default: None)
+  --evalue EVALUE       Report only alignments below or equal the e-value threshold. (default: 0.001)
+  --score SCORE         Report only alignments above or equal the score threshold. (default: None)
+
+Diamond Search Options:
+  --dmnd_algo {auto,0,1,ctg}
+                        Diamonds --algo option, which can be tuned to search small query sets. By default, it is adjusted
+                        automatically. However, the ctg option should be activated manually. If you plan to search a small
+                        input set of sequences, use --dmnd_algo ctg to make it faster. (default: auto)
+  --dmnd_db DMND_DB_FILE
+                        Path to DIAMOND-compatible database (default: None)
+  --sensmode {default,fast,mid-sensitive,sensitive,more-sensitive,very-sensitive,ultra-sensitive}
+                        Diamonds sensitivity mode. Note that emappers default is sensitive, which is different from diamonds
+                        default, which can be activated with --sensmode default. (default: sensitive)
+  --dmnd_iterate {yes,no}
+                        --dmnd_iterate yes --> activates the --iterate option of diamond for iterative searches, from faster,
+                        less sensitive modes, up to the sensitivity specified with --sensmode. Available since diamond 2.0.11.
+                        --dmnd_iterate no --> disables the --iterate mode. (default: yes)
+  --matrix {BLOSUM62,BLOSUM90,BLOSUM80,BLOSUM50,BLOSUM45,PAM250,PAM70,PAM30}
+                        Scoring matrix (default: None)
+  --dmnd_frameshift DMND_FRAMESHIFT
+                        Diamond --frameshift/-F option. Not used by default. Recommended by diamond: 15. (default: None)
+  --gapopen GAPOPEN     Gap open penalty (default: None)
+  --gapextend GAPEXTEND
+                        Gap extend penalty (default: None)
+  --block_size BLOCK_SIZE
+                        Diamond -b/--block-size option. Default is the diamonds default. (default: None)
+  --index_chunks CHUNKS
+                        Diamond -c/--index-chunks option. Default is the diamonds default. (default: None)
+  --outfmt_short        Diamond output will include only qseqid sseqid evalue and score. This could help obtain better
+                        performance, if also no --pident, --query_cover or --subject_cover thresholds are used. This option is
+                        ignored when the diamond search is run in blastx mode for gene prediction (see --genepred). (default:
+                        False)
+  --dmnd_ignore_warnings
+                        Diamond --ignore-warnings option. It avoids Diamond stopping due to warnings (e.g. when a protein
+                        contains only ATGC symbols. (default: False)
+
+MMseqs2 Search Options:
+  --mmseqs_db MMSEQS_DB_FILE
+                        Path to MMseqs2-compatible database (default: None)
+  --start_sens START_SENS
+                        Starting sensitivity. (default: 3)
+  --sens_steps SENS_STEPS
+                        Number of sensitivity steps. (default: 3)
+  --final_sens FINAL_SENS
+                        Final sensititivy step. (default: 7)
+  --mmseqs_sub_mat SUBS_MATRIX
+                        Matrix to be used for --sub-mat MMseqs2 search option. Default=default used by MMseqs2 (default: None)
+
+HMMER Search Options:
+  -d HMMER_DB_PREFIX, --database HMMER_DB_PREFIX
+                        specify the target database for sequence searches. Choose among: euk,bact,arch, or a database loaded in
+                        a server, db.hmm:host:port (see hmm_server.py) (default: None)
+  --servers_list FILE   A FILE with a list of remote hmmpgmd servers. Each row in the file represents a server, in the format
+                        'host:port'. If --servers_list is specified, host and port from -d option will be ignored. (default:
+                        None)
+  --qtype {hmm,seq}     Type of input data (-i). (default: seq)
+  --dbtype {hmmdb,seqdb}
+                        Type of data in DB (-db). (default: hmmdb)
+  --usemem              Use this option to allocate the whole database (-d) in memory using hmmpgmd. If --dbtype hmm, the
+                        database must be a hmmpress-ed database. If --dbtype seqdb, the database must be a HMMER-format
+                        database created with esl-reformat. Database will be unloaded after execution. Note that this only
+                        works for HMMER based searches. To load the eggnog-mapper annotation DB into memory use --dbmem.
+                        (default: False)
+  -p PORT, --port PORT  Port used to setup HMM server, when --usemem. Also used for --pfam_realign modes. (default: 51700)
+  --end_port PORT       Last port to be used to setup HMM server, when --usemem. Also used for --pfam_realign modes. (default:
+                        53200)
+  --num_servers NUM_SERVERS
+                        When using --usemem, specify the number of servers to fire up.Note that cpus specified with --cpu will
+                        be distributed among servers and workers. Also used for --pfam_realign modes. (default: 1)
+  --num_workers NUM_WORKERS
+                        When using --usemem, specify the number of workers per server (--num_servers) to fire up. By default,
+                        cpus specified with --cpu will be distributed among servers and workers. Also used for --pfam_realign
+                        modes. (default: 1)
+  --timeout_load_server TIMEOUT_LOAD_SERVER
+                        Number of attempts to load a server on a specific port. If failed, the next numerical port will be
+                        tried. (default: 10)
+  --hmm_maxhits MAXHITS
+                        Max number of hits to report (0 to report all). (default: 1)
+  --report_no_hits      Whether queries without hits should be included in the output table. (default: False)
+  --hmm_maxseqlen MAXSEQLEN
+                        Ignore query sequences larger than `maxseqlen`. (default: 5000)
+  --Z DB_SIZE           Fixed database size used in phmmer/hmmscan (allows comparing e-values among databases). (default:
+                        40000000)
+  --cut_ga              Adds the --cut_ga to hmmer commands (useful for Pfam mappings, for example). See hmmer documentation.
+                        (default: False)
+  --clean_overlaps none|all|clans|hmmsearch_all|hmmsearch_clans
+                        Removes those hits which overlap, keeping only the one with best evalue. Use the "all" and "clans"
+                        options when performing a hmmscan type search (i.e. domains are in the database). Use the
+                        "hmmsearch_all" and "hmmsearch_clans" options when using a hmmsearch type search (i.e. domains are the
+                        queries from -i file). The "clans" and "hmmsearch_clans" and options will only have effect for hits
+                        to/from Pfam. (default: None)
+
+Annotation Options:
+  --no_annot            Skip functional annotation, reporting only hits. (default: False)
+  --dbmem               Use this option to allocate the whole eggnog.db DB in memory. Database will be unloaded after
+                        execution. (default: False)
+  --seed_ortholog_evalue MIN_E-VALUE
+                        Min E-value expected when searching for seed eggNOG ortholog. Queries not having a significant seed
+                        orthologs will not be annotated. (default: 0.001)
+  --seed_ortholog_score MIN_SCORE
+                        Min bit score expected when searching for seed eggNOG ortholog. Queries not having a significant seed
+                        orthologs will not be annotated. (default: None)
+  --tax_scope TAX_SCOPE
+                        Fix the taxonomic scope used for annotation, so only speciation events from a particular clade are used
+                        for functional transfer. More specifically, the --tax_scope list is intersected with the seed orthologs
+                        clades, and the resulting clades are used for annotation based on --tax_scope_mode. Note that those
+                        seed orthologs without clades intersecting with --tax_scope will be filtered out, and wont annotated.
+                        Possible arguments for --tax_scope are: 1) A path to a file defined by the user, which contains a list
+                        of tax IDs and/or tax names. 2) The name of a pre-configured tax scope, whose source is a file stored
+                        within the 'eggnogmapper/annotation/tax_scopes/' directory By default, available ones are: 'auto'
+                        ('all'), 'auto_broad' ('all_broad'), 'all_narrow', 'archaea', 'bacteria', 'bacteria_broad',
+                        'eukaryota', 'eukaryota_broad' and 'prokaryota_broad'.3) A comma-separated list of taxonomic names
+                        and/or taxonomic IDs, sorted by preference. An example of list of tax IDs would be 2759,2157,2,1 for
+                        Eukaryota, Archaea, Bacteria and root, in that order of preference. 4) 'none': do not filter out
+                        annotations based on taxonomic scope. (default: auto)
+  --tax_scope_mode TAX_SCOPE_MODE
+                        For a seed ortholog which passed the filter imposed by --tax_scope, --tax_scope_mode controls which
+                        specific clade, to which the seed ortholog belongs, will be used for annotation. Options: 1) broadest:
+                        use the broadest clade. 2) inner_broadest: use the broadest clade from the intersection with
+                        --tax_scope. 3) inner_narrowest: use the narrowest clade from the intersection with --tax_scope. 4)
+                        narrowest: use the narrowest clade. 5) A taxonomic scope as in --tax_scope: use this second list to
+                        intersect with seed ortholog clades and use the narrowest (as in inner_narrowest) from the intersection
+                        to annotate. (default: inner_narrowest)
+  --target_orthologs {one2one,many2one,one2many,many2many,all}
+                        defines what type of orthologs (in relation to the seed ortholog) should be used for functional
+                        transfer (default: all)
+  --target_taxa LIST_OF_TAX_IDS
+                        Only orthologs from the specified comma-separated list of taxa and all its descendants will be used for
+                        annotation transference. By default, all taxa are used. (default: None)
+  --excluded_taxa LIST_OF_TAX_IDS
+                        Orthologs from the specified comma-separated list of taxa and all its descendants will not be used for
+                        annotation transference. By default, no taxa is excluded. (default: None)
+  --report_orthologs    Output the list of orthologs found for each query to a .orthologs file (default: False)
+  --go_evidence {experimental,non-electronic,all}
+                        Defines what type of GO terms should be used for annotation. experimental = Use only terms inferred
+                        from experimental evidence. non-electronic = Use only non-electronically curated terms (default: non-
+                        electronic)
+  --pfam_realign {none,realign,denovo}
+                        Realign the queries to the PFAM domains. none = no realignment is performed. PFAM annotation will be
+                        that transferred as specify in the --pfam_transfer option. realign = queries will be realigned to the
+                        PFAM domains found according to the --pfam_transfer option. denovo = queries will be realigned to the
+                        whole PFAM database, ignoring the --pfam_transfer option. Check hmmer options (--num_servers,
+                        --num_workers, --port, --end_port) to change how the hmmpgmd server is run. (default: none)
+  --md5                 Adds the md5 hash of each query as an additional field in annotations output files. (default: False)
+
+Output options:
+  --output FILE_PREFIX, -o FILE_PREFIX
+                        base name for output files (default: None)
+  --output_dir DIR      Where output files should be written (default: /home/dorian.rojas)
+  --scratch_dir DIR     Write output files in a temporary scratch dir, move them to the final output dir when finished. Speed
+                        up large computations using network file systems. (default: None)
+  --temp_dir DIR        Where temporary files are created. Better if this is a local disk. (default: /home/dorian.rojas)
+  --no_file_comments    No header lines nor stats are included in the output files (default: False)
+  --decorate_gff DECORATE_GFF
+                        Add search hits and/or annotation results to GFF file from gene prediction of a user specified one. no
+                        = no GFF decoration at all. GFF file from blastx-based gene prediction will be created anyway. yes =
+                        add search hits and/or annotations to GFF file from Prodigal or blastx-based gene prediction. FILE =
+                        decorate the specified pre-existing GFF FILE. e.g. --decorage_gff myfile.gff You change the field
+                        interpreted as ID of the feature with --decorate_gff_ID_field. (default: no)
+  --decorate_gff_ID_field DECORATE_GFF_ID_FIELD
+                        Change the field used in GFF files as ID of the feature. (default: ID)
+  --excel               Output annotations also in .xlsx format. (default: False)
+```
+
+eggNOG-mapper has default settings for accepting protein files. Therefore, the input file type must be set to `--itype metagenome` and `--genepred prodigal` for performing the gene prediction using Progial. Indicate the code to run in all available cpus. The `-o` and `-i` are required and it is recommended to indicate both the `--output_dir` and `--temp_dir` to the same `13-eggnog` folder.
+
+> If the job takes a while running, the results in the common repository `/home/public/met-workshop`
+
+The output from eggNOG-mapper are sveral tab-separated files that present the used orthologs for inference (`workshop.emapper.seed_orthologs`), orthologs hits (`workshop.emapper.hits`), protein prediction with prodigal (`workshop.emapper.genepred.gff` and `workshop.emapper.genepred.fasta`), and the summary table of the metabolic functions annotated `workshop.emapper.annotations`. This last table is the one of interest for this workshop.
+
+```bash
+(base) [dorian.rojas@accessnode test]$ ls 13-eggnog/
+workshop.emapper.annotations     workshop.emapper.genepred.gff  workshop.emapper.seed_orthologs
+workshop.emapper.genepred.fasta  workshop.emapper.hits
+```
+
+```bash
+(base) [dorian.rojas@accessnode 13-eggnog]$ head workshop.emapper.annotations
+## Mon Feb 24 19:04:14 2025
+## emapper-2.1.12
+## /usr/local/bin/emapper.py --cpu 64 -i 10-final-MAGs/bins/pangenome.fasta --itype metagenome --genepred prodigal -o workshop --output_dir 13-eggnog/ --temp_dir 13-eggnog/
+##
+#query  seed_ortholog   evalue  score   eggNOG_OGs      max_annot_lvl   COG_category    Description     Preferred_name  GOs     EC       KEGG_ko KEGG_Pathway    KEGG_Module     KEGG_Reaction   KEGG_rclass     BRITE   KEGG_TC CAZy    BiGG_Reaction   PFAMs
+SRR8555091_bin.1.permissive_0_1 906968.Trebr_2272       3.66e-36        124.0   COG0100@1|root,COG0100@2|Bacteria,2J7BP@203691|Spirochaetes      203691|Spirochaetes     J       Located on the platform of the 30S subunit, it bridges several disparate RNA helices of the 16S rRNA. Forms part of the Shine-Dalgarno cleft in the 70S ribosome rpsK    -       -       ko:K02948       ko03010,map03010 M00178,M00179   -       -       br01610,ko00000,ko00001,ko00002,ko03011 -       -       -       Ribosomal_S11
+SRR8555091_bin.1.permissive_0_2 1124982.MSI_07440       2.34e-66        203.0   COG0099@1|root,COG0099@2|Bacteria,2J7QU@203691|Spirochaetes      203691|Spirochaetes     J       Located at the top of the head of the 30S subunit, it contacts several helices of the 16S rRNA. In the 70S ribosome it contacts the 23S rRNA (bridge B1a) and protein L5 of the 50S subunit (bridge B1b), connecting the 2 subunits       rpsM    -       -       ko:K02952       ko03010,map03010        M00178,M00179   -       -       br01610,ko00000,ko00001,ko00002,ko03011  -       -       -       Ribosomal_S13
+SRR8555091_bin.1.permissive_0_3 1124982.MSI_07420       4.86e-253       702.0   COG0201@1|root,COG0201@2|Bacteria,2J5BH@203691|Spirochaetes      203691|Spirochaetes     U       The central subunit of the protein translocation channel SecYEG. Consists of two halves formed by TMs 1-5 and 6-10. These two domains form a lateral gate at the front which open onto the bilayer between TMs 2 and 7, and are clamped together by SecE at the back. The channel is closed by both a pore ring composed of hydrophobic SecY resides and a short helix (helix 2A) on the extracellular side of the membrane which forms a plug. The plug probably moves laterally to allow the channel to open. The ring and the pore may move independently        secY    -       -       ko:K03076       ko02024,ko03060,ko03070,map02024,map03060,map03070       M00335  -       -       ko00000,ko00001,ko00002,ko02044 3.A.5   -       -       SecY
+SRR8555091_bin.1.permissive_0_4 877418.ATWV01000004_gene1907    5.16e-81        243.0   COG0200@1|root,COG0200@2|Bacteria,2J7ZW@203691|Spirochaetes      203691|Spirochaetes     J       Binds to the 23S rRNA   rplO    -       -       ko:K02876       ko03010,map03010 M00178,M00179   -       -       br01610,ko00000,ko00001,ko00002,ko03011 -       -       -       Ribosomal_L27A
+SRR8555091_bin.1.permissive_0_5 1124982.MSI_07390       9.72e-89        263.0   COG0098@1|root,COG0098@2|Bacteria,2J60F@203691|Spirochaetes      203691|Spirochaetes     J       Located at the back of the 30S subunit body where it stabilizes the conformation of the head with respect to the body    rpsE    -       -       ko:K02988       ko03010,map03010        M00178,M00179   -       -br01610,ko00000,ko00001,ko00002,ko03011 -       -       -       Ribosomal_S5,Ribosomal_S5_C
+```
+
+The `KEGG_Pathway` columns indicate IDs for metabolic pathway of the KEGG database. In this regard, the `Description` and `PFAMs` present an overall idea of the function and gene annotated in the pangenome.
 
 ## Code templates
 
@@ -820,10 +1217,12 @@ CTN_PATH=/opt/ohpc/pub/containers/BIO/
 
 mkdir -p 13-eggnog/
 
+export EGGNOG_DATA_DIR=/home/dorian.rojas/DB/eggNOG_DB/
 
-$CTN_PATH/eggnog-mapper-2.1.12.sif emapper.py --cpu 64 -i 10-final_MAGs/bins/pangenome.fasta \
+$CTN_PATH/eggnog-mapper-2.1.12.sif emapper.py --cpu 64 \
+        -i 10-final-MAGs/bins/pangenome.fasta \
         --itype metagenome --genepred prodigal \
-        --output_dir 13-eggnog/ --temp_dir 13-eggnog/
+        -o workshop --output_dir 13-eggnog/ --temp_dir 13-eggnog/
 
 
 date
