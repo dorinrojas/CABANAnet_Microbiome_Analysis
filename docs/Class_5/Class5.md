@@ -658,11 +658,272 @@ This table with metrics will be used for further analysis.
 
 ## Ecological indexes estimation and metadata analysis (R command line)
 
-[]
+The output abundance tables have to be combined with the taxonomic classification prior the analysis of the microbial diversity. This would allow to have a possible interpretation based on the species identified in the MAGs.
+
+For this, several python codes that allows the data analysis are required. First, the `metadata_tax.py` code will create a file that combines the bins name and the taxonomic classification from GTDB-tk.
+
+> Most of these scripts are an modified version of a code written by the M.Sc. Maria Alejandra Soto, a secondee from the project, for the demostrative purposes of the workshop.
+
+```python
+import pandas as pd
+
+example_tax_classification = pd.read_csv('/home/dorian.rojas/test/11-gtdbtk/gtdbtk.bac120.summary.tsv', delimiter='\t')
+example_tax_classification['user_genome'] = example_tax_classification['user_genome'] + '_filtered_kept_contigs.fasta'
+example = example_tax_classification[['user_genome', 'classification']]
+
+# Saving as a new file in the metadata folder 
+example.to_csv('/home/dorian.rojas/test/16-metadata/tax.csv', index =False)
+```
+
+The end table should look similar to this.
+
+```vim
+user_genome,classification
+SRR8555091_bin.1.permissive_filtered_kept_contigs.fasta,d__Bacteria;p__Spirochaetota;c__Spirochaetia;o__Treponematales;f__Treponemataceae;g__Treponema_D;s__Treponema_D sp900541945
+SRR8555091_bin.2.strict_filtered_kept_contigs.fasta,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA932;g__Cryptobacteroides;s__Cryptobacteroides sp000434935
+SRR9988205_bin.1.permissive_filtered_kept_contigs.fasta,d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli
+SRR9988205_bin.2.permissive_filtered_kept_contigs.fasta,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides fragilis
+```
+
+Subsequently, the code `metadata_checkm.py` generates a table that combines the taxonomic classification with the quality metrics from CheckM.
+
+```python
+import pandas as pd
+
+# gtdbtk classification
+sample_tax = pd.read_csv('/home/dorian.rojas/test/11-gtdbtk/gtdbtk.bac120.summary.tsv', sep = '\t')
+sample_tax['user_genome'] = sample_tax['user_genome'] + '_filtered_kept_contigs.fasta'
+
+# checkm2
+sample_checkm = pd.read_csv('/home/dorian.rojas/test/10-final-MAGs/combined_gunc_and_checkm2.tsv', sep = '\t')
+sample_checkm = sample_checkm.rename(columns = {'genome':'user_genome'}) 
+sample_checkm['Genome_type'] = 'MAG'
+
+# Combining classification and checkm2 info 
+sample_tax = sample_tax.merge(sample_checkm[['user_genome','Genome_type','Completeness','Contamination']], on = 'user_genome', how = 'left')
+sample_tax.to_csv('/home/dorian.rojas/test/16-metadata/tax_checkm.csv', index=False)
+```
+
+The table is similar to the previously created with adding the CheckM results and a new column named `Genome_type` that indicates the bins represents a MAGs.
+
+```vim
+user_genome,classification,closest_genome_reference,closest_genome_reference_radius,closest_genome_taxonomy,closest_genome_ani,closest_genome_af,closest_placement_reference,closest_placement_radius,closest_placement_taxonomy,closest_placement_ani,closest_placement_af,pplacer_taxonomy,classification_method,note,"other_related_references(genome_id,species_name,radius,ANI,AF)",msa_percent,translation_table,red_value,warnings,Genome_type,Completeness,Contamination
+SRR8555091_bin.1.permissive_filtered_kept_contigs.fasta,d__Bacteria;p__Spirochaetota;c__Spirochaetia;o__Treponematales;f__Treponemataceae;g__Treponema_D;s__Treponema_D sp900541945,GCA_022010055.1,95.0,d__Bacteria;p__Spirochaetota;c__Spirochaetia;o__Treponematales;f__Treponemataceae;g__Treponema_D;s__Treponema_D sp900541945,98.12,0.752,GCA_022010055.1,95.0,d__Bacteria;p__Spirochaetota;c__Spirochaetia;o__Treponematales;f__Treponemataceae;g__Treponema_D;s__Treponema_D sp900541945,98.12,0.752,d__Bacteria;p__Spirochaetota;c__Spirochaetia;o__Treponematales;f__Treponemataceae;g__Treponema_D;s__,taxonomic classification defined by topology and ANI,topological placement and ANI have congruent species assignments,"GCA_900317625.1, s__Treponema_D sp900317625, 95.0, 85.39, 0.268; GCA_002478955.1, s__Treponema_D sp002478955, 95.0, 85.14, 0.279; GCA_934718065.1, s__Treponema_D sp934718065, 95.0, 84.66, 0.211",79.66,11,,,MAG,86.0,1.87
+SRR8555091_bin.2.strict_filtered_kept_contigs.fasta,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA932;g__Cryptobacteroides;s__Cryptobacteroides sp000434935,GCA_000434935.1,95.0,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA932;g__Cryptobacteroides;s__Cryptobacteroides sp000434935,96.83,0.773,GCA_000434935.1,95.0,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA932;g__Cryptobacteroides;s__Cryptobacteroides sp000434935,96.83,0.773,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA932;g__Cryptobacteroides;s__,taxonomic classification defined by topology and ANI,topological placement and ANI have congruent species assignments,,72.67,11,,,MAG,78.16,2.29
+SRR9988205_bin.1.permissive_filtered_kept_contigs.fasta,d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli,GCF_003697165.2,95.0,d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli,98.39,0.921,GCF_003697165.2,95.0,d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli,98.39,0.921,d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__,taxonomic classification defined by topology and ANI,topological placement and ANI have congruent species assignments,"GCF_000194175.1, s__Escherichia coli_F, 95.0, 95.66, 0.841; GCF_002965065.1, s__Escherichia sp002965065, 95.0, 94.29, 0.69; GCF_004211955.1, s__Escherichia sp004211955, 95.0, 93.15, 0.728; GCF_005843885.1, s__Escherichia sp005843885, 95.0, 92.99, 0.746; GCF_029876145.1, s__Escherichia ruysiae, 95.0, 92.88, 0.744; GCF_000026225.1, s__Escherichia fergusonii, 95.0, 92.75, 0.565; GCF_011881725.1, s__Escherichia coli_E, 95.0, 92.4, 0.713; GCF_014836715.1, s__Escherichia whittamii, 95.0, 92.08, 0.741; GCF_002900365.1, s__Escherichia marmotae, 95.0, 91.17, 0.711; GCF_000759775.1, s__Escherichia albertii, 95.0, 90.64, 0.611",86.0,11,,,MAG,82.96,0.45
+SRR9988205_bin.2.permissive_filtered_kept_contigs.fasta,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides fragilis,GCF_000025985.1,95.0,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides fragilis,99.01,0.901,GCF_000025985.1,95.0,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides fragilis,99.01,0.901,d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__,taxonomic classification defined by topology and ANI,topological placement and ANI have congruent species assignments,"GCA_947646015.1, s__Bacteroides sp947646015, 95.0, 97.98, 0.349; GCF_019583405.1, s__Bacteroides fragilis_B, 95.0, 91.9, 0.692; GCF_014288095.1, s__Bacteroides hominis, 95.0, 88.11, 0.582",90.21,11,,,MAG,95.32,0.27
+```
+
+Now, it is required to use these files to create table that combines both the abundance estimated from inStrain and the taxonomic classification. First, create a directory named `16-metadata/instrain_copies` and copy the `genome_info.tsv` generated from inStrain into this folder. This will allow to edit their contents without affecting the original files.
+
+```bash
+(base) [dorian.rojas@accessnode test]$ mkdir 16-metadata/instrain_copies/
+(base) [dorian.rojas@accessnode test]$ cp 15-instrain/*/output/*_genome_info.tsv 16-metadata/instrain_copies/
+(base) [dorian.rojas@accessnode test]$ ll -h 16-metadata/*
+-rw-rw-r-- 1 dorian.rojas dorian.rojas 4,4K feb 26 12:29 16-metadata/tax_checkm.csv
+-rw-rw-r-- 1 dorian.rojas dorian.rojas  742 feb 26 12:39 16-metadata/tax.csv
+
+16-metadata/instrain_copies:
+total 8,0K
+-rw-rw-r-- 1 dorian.rojas dorian.rojas 1,3K feb 26 12:42 SRR8555091_genome_info.tsv
+-rw-rw-r-- 1 dorian.rojas dorian.rojas 1,2K feb 26 12:42 SRR9988205_genome_info.tsv
+```
+
+The python code `abundance_tax_filter.py` will generate one abundance table per sample with that include the taxonomic classification into the inStrain results.
+
+This code could allow the filtering of the identified bins based in the breadth value. As mentiones above, certain value could represent that these bins are not to be considered bacteria but rather certain genetic elements or mismapping. Therefore, depending on the study objective, researchers aim to remove bins with low abundance. There is no 'standard' for the breadth value, so it is strongly dependent on the overall results of the metagenomic analysis. However, in this case, considering the small number of bins analyzed, this filtering step won't be performed.
+
+```python
+import pandas as pd
+import os
+
+## Extract taxonomy information for the GTDBtk results
+
+metadata_file_paths = [
+    '/home/dorian.rojas/test/16-metadata/tax_checkm.csv',
+    '/home/dorian.rojas/test/16-metadata/tax.csv'
+]
+
+# Step 1: Create a dictionary of user_genome and taxonomic classification
+classification_dict = {}
+
+for file in metadata_file_paths:
+    taxonomy_data = pd.read_csv(file)
+    taxonomy_data['user_genome'] = taxonomy_data['user_genome'].str.replace('_filtered_kept_contigs.fasta', '', regex=False)
+    classification_dict.update(dict(zip(taxonomy_data['user_genome'], taxonomy_data['classification'])))
+
+## Add taxonomy information to abundance estimation results (InStrain output) and filter rows with genome coverage lower than 0.5 (optional)
+
+# List of .csv files to process (original inStrain outputs are in another folder (/home/dorian.rojas/test/15-instrain). The tables that will be updated are copies)
+abundance_tables_parent_dir = '/home/dorian.rojas/test/16-metadata/instrain_copies/' 
+output_dir = '/home/dorian.rojas/test/16-metadata/'  
+
+#Step 2: Iterate through .tsv files in the parent directory and update them 
+for root, _, files in os.walk(abundance_tables_parent_dir):
+    for file in files:
+        if file.endswith('.tsv'):
+            tsv_path = os.path.join(root, file)
+            abundance_tsv_data = pd.read_csv(tsv_path, sep='\t')
+            
+            # Clean user_genome values in the .tsv file
+            abundance_tsv_data = abundance_tsv_data.rename(columns = {'genome':'user_genome'}) 
+            abundance_tsv_data['user_genome'] = abundance_tsv_data['user_genome'].str.replace('_filtered_kept_contigs.fasta', '', regex=False)
+            abundance_tsv_data['user_genome'] = abundance_tsv_data['user_genome'].str.replace('.fasta', '', regex=False)
+            
+            # Map the classification column to the user_genome column
+            abundance_tsv_data['classification'] = abundance_tsv_data['user_genome'].map(classification_dict)
+            
+            # Remove rows where the 'breadth' column is lower than 0.5 (optional)
+            # abundance_tsv_data =  abundance_tsv_data[abundance_tsv_data['breadth'] >= 0.5]
+
+            # Save the updated .tsv file
+            output_path = os.path.join(output_dir, file)
+            abundance_tsv_data.to_csv(output_path, sep='\t', index=False)
+            print(f"Updated file saved to: {output_path}")
+```
+
+The output from this python should look similar to the inStrain with an additional column named `classification` at the end.
+
+```bash
+(base) [dorian.rojas@accessnode test]$ ls 16-metadata/
+instrain_copies  SRR8555091_genome_info.tsv  SRR9988205_genome_info.tsv  tax_checkm.csv  tax.csv
+(base) [dorian.rojas@accessnode test]$ cat 16-metadata/SRR9988205_genome_info.tsv
+user_genome     coverage        breadth nucl_diversity  length  true_scaffolds  detected_scaffolds      coverage_median     coverage_std    coverage_SEM    breadth_minCov  breadth_expected        nucl_diversity_rarefied     conANI_reference        popANI_reference        iRep    iRep_GC_corrected       linked_SNV_count   SNV_distance_mean        r2_mean d_prime_mean    consensus_divergent_sites       population_divergent_sites SNS_count        SNV_count       filtered_read_pair_count        reads_unfiltered_pairs  reads_mean_PID  divergent_site_count        reads_unfiltered_reads  classification
+SRR9988205_bin.1.permissive     5.496498350383906       0.994117863265243       0.0008198111233099      3781789     781     781     5       2.6698752312885534      0.001402173454713       0.6071142520114158      0.9921982564903672  0.0     0.9999629787393434      0.999998257823028               False   203     26.88177339901478   0.627394623981047       0.9875701459034792      85      4       3       459     92969   94802   0.9982983789351916  462     191829  d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli
+SRR9988205_bin.2.permissive     9.223122918012026       0.9982518369063236      0.0005069402542589      4456678     545     545     9       4.186153449138965       0.0020076430886163      0.8682996617660059      0.9997095321144326  0.0     0.9999790683179094      0.9999994831683434      1.9121057585254528      False   52530.02285714285714        0.5179457671047509      0.9642752701766494      81      2       2       676     190590      194320  0.998575959217324       678     390820  d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides fragilis
+```
+
+To continue, it is require to consolidate the abundances of each bin into a single table. The following code (`consolidate_abundance.py`) creates an abundance table with each MAGs as columns and sample as rows. Notice the `filtered_read_pair_count` is the extracted column used to evaluate the abundance of each bin.
+
+```python
+import pandas as pd
+import glob
+import os
+
+# Define the path to your inStrain otput (genome_info.tsv files)
+file_paths = glob.glob('/home/dorian.rojas/test/16-metadata/*_genome_info.tsv')
+
+# Create an empty DataFrame to store all the abundance results
+final_df = pd.DataFrame()
+
+# Process each file
+for file_path in file_paths:
+    file_name = os.path.basename(file_path).replace('_genome_info.tsv', '')
+    df = pd.read_csv(file_path, sep='\t')
+
+# Create a dictionary with 'filtered_read_pair_count' values, even if they are 0
+    data = {
+        'file_name': [file_name],
+        **{genome: [filtered_count] for genome, filtered_count in zip(df['user_genome'], df['filtered_read_pair_count'])}
+    }
+
+    # Convert the dictionary to a DataFrame and concatenate it to the final DataFrame
+    result = pd.DataFrame(data)
+    final_df = pd.concat([final_df, result], ignore_index=True)
+
+# Fill NaN values with 0 to ensure all genomes have a value
+final_df.fillna(0, inplace=True)
+
+# Save the combined DataFrame to a CSV file
+final_df.to_csv('/home/dorian.rojas/test/16-metadata/final_combined_abundance_output.csv', index=False)
+print("Combined CSV file 'final_combined_abundance_output.csv' has been created.")
+```
+
+In this case, due to the small number of bins and samples, the output is short.
+
+```vim
+file_name,SRR8555091_bin.1.permissive,SRR8555091_bin.2.strict,SRR9988205_bin.1.permissive,SRR9988205_bin.2.permissive
+SRR8555091,55394.0,56537.0,0.0,0.0
+SRR9988205,0.0,0.0,92969.0,190590.0
+```
+
+Finally, prior the diversity analysis, a final table with the input for the R packages needs to be creates. For this, a final python code will combine both the `tax.csv` and the `tax_checkm.csv` into an acceptable format for the R packages.
+
+Prior to run this code, a `MAGs_list.txt` file needs to be created. This file is made using the command `awk '{print $2}' path/to/gtdb-input.txt > output/MAGs_list.txt`. For instance:
+
+```bash
+(base) [dorian.rojas@accessnode test]$ awk '{print $2}' 10-final-MAGs/gtdb-input.txt > 16-metadata/MAGs_list.txt
+(base) [dorian.rojas@accessnode test]$ cat 16-metadata/MAGs_list.txt
+SRR8555091_bin.1.permissive
+SRR8555091_bin.2.strict
+SRR9988205_bin.1.permissive
+SRR9988205_bin.2.permissive
+```
+
+This file contains the genome name of the final bins present in the pangenome. Finally, the `metadata_for_R.py` code will generate the required table.
+
+```python
+import pandas as pd
+
+# File paths
+metadata_file_paths = [
+    '/home/dorian.rojas/test/16-metadata/tax_checkm.csv',
+    '/home/dorian.rojas/test/16-metadata/tax.csv'
+]
+
+genome_list_path = '/home/dorian.rojas/test/16-metadata/MAGs_list.txt'  
+output_csv_path = '/home/dorian.rojas/test/16-metadata/all_MAGs_taxonomy.csv' 
+
+# Step 1: Read the genome list
+genome_list = []
+with open(genome_list_path, 'r') as file:
+    genome_list = [line.strip() for line in file]
+
+# Step 2: Create a dictionary of user_genome -> classification
+classification_dict = {}
+
+for file in metadata_file_paths:
+    taxonomy_data = pd.read_csv(file)
+    taxonomy_data['user_genome'] = taxonomy_data['user_genome'].str.replace('_filtered_kept_contigs.fasta', '', regex=False)
+    taxonomy_data['user_genome'] = taxonomy_data['user_genome'].str.replace('.fa', '', regex=False)
+    classification_dict.update(dict(zip(taxonomy_data['user_genome'], taxonomy_data['classification'])))
+
+# Step 3: create a dictionary to store the genome's name (User_Genome) and the extracted taxonomic levels 
+columns = ['User_Genome', 'Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species']
+output_data = []
+
+for genome in genome_list:
+    classification = classification_dict.get(genome, None)
+    if classification:
+        taxonomy_levels = classification.split(';')
+        taxonomy_dict = {
+            'User_Genome': genome,
+            'Domain': next((x.replace('d__', '') for x in taxonomy_levels if x.startswith('d__')), ''),
+            'Phylum': next((x.replace('p__', '') for x in taxonomy_levels if x.startswith('p__')), ''),
+            'Class': next((x.replace('c__', '') for x in taxonomy_levels if x.startswith('c__')), ''),
+            'Order': next((x.replace('o__', '') for x in taxonomy_levels if x.startswith('o__')), ''),
+            'Family': next((x.replace('f__', '') for x in taxonomy_levels if x.startswith('f__')), ''),
+            'Genus': next((x.replace('g__', '') for x in taxonomy_levels if x.startswith('g__')), ''),
+            'Species': next((x.replace('s__', '') for x in taxonomy_levels if x.startswith('s__')), '')
+        }
+        output_data.append(taxonomy_dict)  # Add the dictionary to the output_data list
+
+# Step 4: Save the output to a .csv file
+output_df = pd.DataFrame(output_data, columns=columns)  # converts the list of dictionaries (output_data) into a DataFrame.
+output_df.to_csv(output_csv_path, index=False)
+
+print(f"Taxonomy data has been saved to {output_csv_path}.")
+```
+
+The output is named `all_MAGs_taxonomy.csv` and contains the column names refering to the sample and each taxonomic classification level and rows as the data respective for each column.
+
+```vim
+User_Genome,Domain,Phylum,Class,Order,Family,Genus,Species
+SRR8555091_bin.1.permissive,Bacteria,Spirochaetota,Spirochaetia,Treponematales,Treponemataceae,Treponema_D,Treponema_D sp900541945
+SRR8555091_bin.2.strict,Bacteria,Bacteroidota,Bacteroidia,Bacteroidales,UBA932,Cryptobacteroides,Cryptobacteroides sp000434935
+SRR9988205_bin.1.permissive,Bacteria,Pseudomonadota,Gammaproteobacteria,Enterobacterales,Enterobacteriaceae,Escherichia,Escherichia coli
+SRR9988205_bin.2.permissive,Bacteria,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,Bacteroides,Bacteroides fragilis
+```
+
+The results from these data maniputations will be used to conduct the diversity analysis in the R code.
 
 ### Coding the phyloseq and microviz R packages
 
-[]
+The diversity analysis of the microbiome requires three different files, an Operational Taxonomic Units (OTUs) table, a taxonomy table, and a metadata table. From the previous analysis, the `final_combined_abundance_output.csv` represents the OTUs table with the bins and respective abundance. Meanwhile, the `all_MAGs_taxonomy.csv` is the tax table.
+
+The metadata table is a desired feature of most metagenomic analysis for the interpretation of microbial composition. Commonly, these tables would be composed of a column with the name of each of the samples and information about the individual (e.g. age, weigth, BMI, height, country). These serves as categorical factors to evaluate the microbial composotion and the abundances of each bin.
+
+This information is missing or it is poor in our samples. Hence, this part of the workshop is demonstrative based on a similar analysis conducted with a greater amount of samples and extensive metadata.
 
 ## Code templates
 
@@ -926,4 +1187,129 @@ date
 end=`date +%s`
 runtime=$((end-start))
 echo 'Runtime was ' $runtime
+```
+
+**`metadata_tax.py` file:**
+
+```python
+import pandas as pd
+
+example_tax_classification = pd.read_csv('/home/dorian.rojas/test/11-gtdbtk/gtdbtk.bac120.summary.tsv', delimiter='\t')
+example_tax_classification['user_genome'] = example_tax_classification['user_genome'] + '_filtered_kept_contigs.fasta'
+example = example_tax_classification[['user_genome', 'classification']]
+
+# Saving as a new file in the metadata folder 
+example.to_csv('/home/dorian.rojas/test/16-metadata/tax.csv', index =False)
+```
+
+**`metadata_checkm.py` file:**
+
+```python
+import pandas as pd
+
+# gtdbtk classification
+sample_tax = pd.read_csv('/home/dorian.rojas/test/11-gtdbtk/gtdbtk.bac120.summary.tsv', sep = '\t')
+sample_tax['user_genome'] = sample_tax['user_genome'] + '_filtered_kept_contigs.fasta'
+
+# checkm2
+sample_checkm = pd.read_csv('/home/dorian.rojas/test/10-final-MAGs/combined_gunc_and_checkm2.tsv', sep = '\t')
+sample_checkm = sample_checkm.rename(columns = {'genome':'user_genome'}) 
+sample_checkm['Genome_type'] = 'MAG'
+
+# Combining classification and checkm2 info 
+sample_tax = sample_tax.merge(sample_checkm[['user_genome','Genome_type','Completeness','Contamination']], on = 'user_genome', how = 'left')
+sample_tax.to_csv('/home/dorian.rojas/test/16-metadata/tax_checkm.csv', index=False)
+```
+
+**`abundance_tax_filter.py` file:**
+
+```python
+import pandas as pd
+import os
+
+## Extract taxonomy information for the GTDBtk results
+
+metadata_file_paths = [
+    '/home/dorian.rojas/test/16-metadata/tax_checkm.csv',
+    '/home/dorian.rojas/test/16-metadata/tax.csv'
+]
+
+# Step 1: Create a dictionary of user_genome and taxonomic classification
+classification_dict = {}
+
+for file in metadata_file_paths:
+    taxonomy_data = pd.read_csv(file)
+    taxonomy_data['user_genome'] = taxonomy_data['user_genome'].str.replace('_filtered_kept_contigs.fasta', '', regex=False)
+    classification_dict.update(dict(zip(taxonomy_data['user_genome'], taxonomy_data['classification'])))
+
+## Add taxonomy information to abundance estimation results (InStrain output) and filter rows with genome coverage lower than 0.5 (optional)
+
+# List of .csv files to process (original inStrain outputs are in another folder (/home/dorian.rojas/test/15-instrain). The tables that will be updated are copies)
+abundance_tables_parent_dir = '/home/dorian.rojas/test/16-metadata/instrain_copies/' 
+output_dir = '/home/dorian.rojas/test/16-metadata/'  
+
+#Step 2: Iterate through .tsv files in the parent directory and update them 
+for root, _, files in os.walk(abundance_tables_parent_dir):
+    for file in files:
+        if file.endswith('.tsv'):
+            tsv_path = os.path.join(root, file)
+            abundance_tsv_data = pd.read_csv(tsv_path, sep='\t')
+            
+            # Clean user_genome values in the .tsv file
+            abundance_tsv_data = abundance_tsv_data.rename(columns = {'genome':'user_genome'}) 
+            abundance_tsv_data['user_genome'] = abundance_tsv_data['user_genome'].str.replace('_filtered_kept_contigs.fasta', '', regex=False)
+            abundance_tsv_data['user_genome'] = abundance_tsv_data['user_genome'].str.replace('.fasta', '', regex=False)
+            
+            # Map the classification column to the user_genome column
+            abundance_tsv_data['classification'] = abundance_tsv_data['user_genome'].map(classification_dict)
+            
+            # Remove rows where the 'breadth' column is lower than 0.5 (optional)
+            # abundance_tsv_data =  abundance_tsv_data[abundance_tsv_data['breadth'] >= 0.5]
+
+            # Save the updated .tsv file
+            output_path = os.path.join(output_dir, file)
+            abundance_tsv_data.to_csv(output_path, sep='\t', index=False)
+            print(f"Updated file saved to: {output_path}")
+```
+
+**`consolidate_abundance.py` file:**
+
+```python
+import pandas as pd
+import glob
+import os
+
+# Define the path to your inStrain otput (genome_info.tsv files)
+file_paths = glob.glob('/home/dorian.rojas/test/16-metadata/*_genome_info.tsv')
+
+# Create an empty DataFrame to store all the abundance results
+final_df = pd.DataFrame()
+
+# Process each file
+for file_path in file_paths:
+    file_name = os.path.basename(file_path).replace('_genome_info.tsv', '')
+    df = pd.read_csv(file_path, sep='\t')
+
+# Create a dictionary with 'filtered_read_pair_count' values, even if they are 0
+    data = {
+        'file_name': [file_name],
+        **{genome: [filtered_count] for genome, filtered_count in zip(df['user_genome'], df['filtered_read_pair_count'])}
+    }
+
+    # Convert the dictionary to a DataFrame and concatenate it to the final DataFrame
+    result = pd.DataFrame(data)
+    final_df = pd.concat([final_df, result], ignore_index=True)
+
+# Fill NaN values with 0 to ensure all genomes have a value
+final_df.fillna(0, inplace=True)
+
+# Save the combined DataFrame to a CSV file
+final_df.to_csv('/home/dorian.rojas/test/16-metadata/final_combined_abundance_output.csv', index=False)
+print("Combined CSV file 'final_combined_abundance_output.csv' has been created.")
+```
+
+**`metadata_for_R.py` file:**
+
+```python
+
 ```
