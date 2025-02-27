@@ -2,7 +2,7 @@
 
 - - - -
 
-## Taxonomical annotatiion of MAGs (GTDBtk)
+## Taxonomical annotation of MAGs (GTDBtk)
 
 Until this section of the workshop, the output are solemnly fasta sequences. Clean, filtered, and perfect fasta sequences that are collected in bins. Each of these bins represent, in theory, one species.
 
@@ -128,7 +128,7 @@ optional arguments:
 
 Code for the `classify_wf` workflow for the indicating the batch file created with the python script as the input and a novel `11-gtdbtk` as the outpur directory. Notice the default extension of the software is `.fna`. Therefore, set the extension to `.gz` using the `-x` flag. In this case, threats are specified using the `--cpus` option. Also, due to the time consuming nature of the process, add the `-skip_ani_screen` function.
 
-The database for the gtdbtk must be indicated by adding `export GTDBTK_DATA_PATH="/home/public/DB/release220/"` prior the tool command. `export` is a base command that sets an environmental variable. Most variables are different depending on the running software; therefore, this information has to be retrieved from the source code or the github repository.
+The database for the gtdbtk must be indicated by adding `export GTDBTK_DATA_PATH="/home/public/met-workshop/databases/release220/"` prior the tool command. `export` is a base command that sets an environmental variable. Most variables are different depending on the running software; therefore, this information has to be retrieved from the source code or the github repository.
 
 This analysis needs to be run only once in the batch file. As the input is not divided by the samples and the batch file includes samples from all the bins. This allows the `.slurm` to be slightly different. For instance, the `for` loop can be removed from the command the output is set to the general directory, avoiding the creation of sample-specific subfolders.
 
