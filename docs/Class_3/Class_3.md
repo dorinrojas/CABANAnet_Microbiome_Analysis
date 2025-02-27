@@ -50,7 +50,7 @@ conda activate mdmcleaner
 
 This short script will create a new environment named `mdmcleaner` (`conda create...`) and install the MDMcleaner software extracted from the bioconda channel (`conda install...`). Finally the environment will be automatically activated. For any further use, by running `conda activate mdmcleaner` in the console, this environment will work correctly.
 
-Run the basic mdmclenaer command and check the options.
+Run the basic mdmcleaner command and check the options.
 
 ```bash
 (base) [dorian.rojas@accessnode ~]$ mdmcleaner -h
@@ -75,7 +75,7 @@ options:
   -h, --help            show this help message and exit
 ```
 
-The command `set_configs` is required to indicate the path towards the database. The dabatase is downloaded in the public folder `/home/public/DB` and it is named `gtdb`. However, the tools only required the folder CONTAINING the database. This needs to be set each time the software is used within the for loop before the actual command. Check the options.
+The command `set_configs` is required to indicate the path towards the database. The dabatase is downloaded in the public folder `/home/public/DB` and it is named `gtdb`. However, the tools only required the folder CONTAINING the database. This needs to be set each time the software is used within the `for` loop before the actual command. Check the options.
 
 ```bash
 (base) [dorian.rojas@accessnode test]$ mdmcleaner set_configs -h
@@ -137,7 +137,7 @@ options:
                         contaminations will not be verified)
 ```
 
-MDMcleaner outputs overview files of the complete process and the `mdmcleaner.config` file where the database and other commands are indicated. These are created in the working directory. Therefore, to avoid each of the samples to overwrite the results, the working directory must change. This would also require to direct the `clean` command to the complete path of the input files. You can set this with a variable to make the code shorter. The for loop should look something simialr to the example below:
+MDMcleaner outputs overview files of the complete process and the `mdmcleaner.config` file where the database and other commands are indicated. These are created in the working directory. Therefore, to avoid each of the samples to overwrite the results, the working directory must change. This would also require to direct the `clean` command to the complete path of the input files. You can set this with a variable to make the code shorter. The `for` loop should look something simialr to the example below:
 
 ```vim
 cd /home/dorian.rojas/test
@@ -293,7 +293,7 @@ Additionally, the results from mdmcleaner are presented in different subfolders 
 
 Code for a simple analysis of the bins that were kept after the mdmcleaner for each bin. Save the results in a `8-gunc` folder and set the threads to the maximum available per node.
 
-By the end of the code, create a new folder in the `7-mdmcleaner` directory called `bins` and copy all the `*fasta.gz` files that were analyzed. For this, include something similar to this after running mdmcleaner.
+By the end of the code, create a new folder in the `7-mdmcleaner` directory called `bins` and copy all the `*fasta.gz` files that were analyzed. For this, include something similar to this after running gunc.
 
 ```vim
 #Creating a final folder with all the bins
@@ -324,7 +324,7 @@ SRR9988205_bin.1.permissive_filtered_kept_contigs.fasta 3983    3951    781     
 SRR9988205_bin.2.permissive_filtered_kept_contigs.fasta 3737    3591    544     kingdom 1.0     0.96    0.00.0      0.0     0.96    0.92    True
 ```
 
-Basicallly, those bins with the category `True` are the one further selected for following analysis.
+Basically, those bins with the category `True` are the one further selected for following analysis.
 
 ### Running CheckM2
 
